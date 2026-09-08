@@ -12,6 +12,7 @@
             background: #f4f6f8;
             margin: 0;
             padding: 20px;
+            padding-bottom: 50px; /* Espaço para o rodapé fixo não cobrir elementos */
         }
 
         /* Seletor de Idioma Unificado e Fixo */
@@ -40,6 +41,21 @@
         .lang-btn.active {
             background: #2e7d32;
             color: #ffffff;
+        }
+
+        /* Rodapé Fixo Global (z-index 20000) */
+        .global-footer {
+            position: fixed;
+            bottom: 10px;
+            left: 15px;
+            z-index: 20000;
+            font-size: 11px;
+            color: #ffffff;
+            background: rgba(0, 0, 0, 0.65);
+            padding: 4px 10px;
+            border-radius: 12px;
+            backdrop-filter: blur(4px);
+            pointer-events: none;
         }
 
         /* Overlay de Instalação (Bloqueia o restante) */
@@ -185,6 +201,16 @@
             margin-bottom: 10px;
         }
 
+        /* Rodapé interno do Card */
+        .card-footer {
+            margin-top: 20px;
+            padding-top: 12px;
+            border-top: 1px solid #eee;
+            text-align: center;
+            font-size: 12px;
+            color: #777;
+        }
+
         /* Pop-up Flutuante (Toast) na parte inferior */
         .toast {
             position: fixed;
@@ -233,6 +259,11 @@
         <button class="lang-btn" onclick="alterarIdioma('en')">EN</button>
     </div>
 
+    <!-- Rodapé Fixo Global (z-index 20000) -->
+    <div class="global-footer">
+        <span data-i18n="lblDevBy">Dev:</span> Guilherme Neves | <span class="app-version-val">v1.0.0</span>
+    </div>
+
     <!-- Overlay Obrigatório de Instalação -->
     <div id="installOverlay">
         <div class="install-box">
@@ -263,6 +294,12 @@
             <button id="btnToggleCamera" class="btn btn-scanner" data-i18n="btnCamOpen">Abrir Câmera Traseira</button>
             <div id="reader"></div>
         </div>
+
+        <!-- Rodapé Interno do App -->
+        <div class="card-footer">
+            <span data-i18n="lblDevBy">Desenvolvido por</span> <strong>Guilherme Neves</strong><br>
+            <span data-i18n="lblVersion">Versão</span>: <span class="app-version-val">v1.0.0</span>
+        </div>
     </div>
 
     <script>
@@ -286,7 +323,9 @@
                 toastSuccess: "Informações de campo carregadas com sucesso!",
                 toastInvalidQr: "Formato de QR Code inválido!",
                 toastCamError: "Não foi possível acessar a câmera traseira.",
-                unitHa: "ha"
+                unitHa: "ha",
+                lblDevBy: "Desenvolvido por",
+                lblVersion: "Versão"
             },
             en: {
                 appName: "Field Data - Tucano Florestal",
@@ -307,11 +346,33 @@
                 toastSuccess: "Field data loaded successfully!",
                 toastInvalidQr: "Invalid QR Code format!",
                 toastCamError: "Unable to access the rear camera.",
-                unitHa: "ha"
+                unitHa: "ha",
+                lblDevBy: "Developed by",
+                lblVersion: "Version"
             }
         };
 
         let currentLang = localStorage.getItem('app_lang') || (navigator.language.startsWith('en') ? 'en' : 'pt');
+
+        // Função para obter a versão dinamicamente do sw.js
+        async function carregarVersaoDoSW() {
+            try {
+                const response = await fetch('./sw.js');
+                if (!response.ok) return;
+                const text = await response.text();
+                
+                // Procura por variáveis como CACHE_NAME = 'v1.0.2' ou VERSION = '1.0.0'
+                const match = text.match(/(?:CACHE_NAME|VERSION|CACHE_VERSION)\s*=\s*['"`]([^'"`]+)['"`]/i);
+                if (match && match[1]) {
+                    const versao = match[1];
+                    document.querySelectorAll('.app-version-val').forEach(el => {
+                        el.textContent = versao.startsWith('v') ? versao : `v${versao}`;
+                    });
+                }
+            } catch (e) {
+                console.log("Não foi possível carregar a versão do sw.js:", e);
+            }
+        }
 
         function atualizarManifest(lang) {
             const manifestData = {
@@ -519,6 +580,7 @@
         window.addEventListener('DOMContentLoaded', () => {
             alterarIdioma(currentLang);
             verificarStatusApp();
+            carregarVersaoDoSW();
         });
         window.addEventListener('hashchange', () => carregarDados(true));
 
