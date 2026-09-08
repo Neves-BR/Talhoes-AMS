@@ -1,4 +1,4 @@
-const CACHE_NAME = 'talhao-v8';
+const CACHE_NAME = 'v1.8';
 const ASSETS = [
   './',
   './index.html',
