@@ -101,12 +101,12 @@
             margin-bottom: 10px;
         }
 
-        /* Pop-up Flutuante (Toast) para Mobile */
+        /* Pop-up Flutuante (Toast) na parte inferior */
         .toast {
             position: fixed;
-            top: 20px;
+            bottom: 20px;
             left: 50%;
-            transform: translateX(-50%) translateY(-20px);
+            transform: translateX(-50%) translateY(20px);
             z-index: 9999;
             width: 85%;
             max-width: 320px;
@@ -172,7 +172,6 @@
             const toast = document.getElementById('toast');
             if (!toast) return;
 
-            // Limpa o tempo anterior caso um novo toast seja disparado rapidamente
             clearTimeout(toastTimeout);
 
             toast.textContent = mensagem;
@@ -205,7 +204,6 @@
                 btnMapa.classList.add('disabled');
             }
         
-            // Dispara o toast de sucesso
             exibirToast('Dados do talhão carregados com sucesso!', 'success');
         }
 
@@ -257,7 +255,6 @@
                     carregarDados();
                     pararCamera();
                 } else {
-                    // Trata QR Code com dados inválidos
                     exibirToast('Formato de QR Code inválido!', 'error');
                 }
             };
