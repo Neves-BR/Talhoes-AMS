@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="manifest" href="manifest.json">
-    <title>Dados do Talhão / Field Data</title>
+    <title>Dados do Talhão / Plot Data</title>
     <style>
         body {
             font-family: system-ui, -apple-system, sans-serif;
@@ -14,31 +14,32 @@
             padding: 20px;
         }
 
-        /* Seletor de Idioma */
+        /* Seletor de Idioma Unificado e Fixo */
         .lang-switch {
-            position: absolute;
+            position: fixed;
             top: 15px;
             right: 15px;
             display: flex;
             gap: 5px;
-            z-index: 20000;
+            z-index: 20000; /* Fica acima do overlay de instalação */
         }
 
         .lang-btn {
-            background: rgba(255, 255, 255, 0.8);
-            border: 1px solid #ccc;
-            padding: 4px 8px;
-            border-radius: 4px;
+            background: #ffffff;
+            border: 1px solid #2e7d32;
+            padding: 6px 12px;
+            border-radius: 6px;
             font-size: 12px;
             font-weight: bold;
             cursor: pointer;
-            color: #333;
+            color: #2e7d32;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            transition: all 0.2s ease;
         }
 
         .lang-btn.active {
             background: #2e7d32;
-            color: #fff;
-            border-color: #2e7d32;
+            color: #ffffff;
         }
 
         /* Overlay de Instalação (Bloqueia o restante) */
@@ -68,7 +69,6 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             max-width: 320px;
             width: 100%;
-            position: relative;
         }
 
         .install-box h3 {
@@ -87,7 +87,7 @@
         /* Oculta o conteúdo principal por padrão */
         .app-content {
             display: none;
-            position: relative;
+            margin-top: 40px;
         }
 
         /* Exibe o conteúdo apenas quando rodar como App Instalado */
@@ -227,13 +227,15 @@
 
 <body>
 
+    <!-- Seletor Global de Idioma -->
+    <div class="lang-switch">
+        <button class="lang-btn" onclick="alterarIdioma('pt')">PT</button>
+        <button class="lang-btn" onclick="alterarIdioma('en')">EN</button>
+    </div>
+
     <!-- Overlay Obrigatório de Instalação -->
     <div id="installOverlay">
         <div class="install-box">
-            <div class="lang-switch">
-                <button class="lang-btn" onclick="alterarIdioma('pt')">PT</button>
-                <button class="lang-btn" onclick="alterarIdioma('en')">EN</button>
-            </div>
             <h3 data-i18n="installTitle">Instalação Necessária</h3>
             <p data-i18n="installText">Para utilizar o aplicativo de Dados do Talhão, você precisa instalá-lo no seu dispositivo.</p>
             <button id="btnInstalarModal" class="btn btn-install" data-i18n="btnInstall">Instalar Aplicativo</button>
@@ -248,10 +250,6 @@
 
     <!-- Conteúdo Principal (Protegido) -->
     <div class="card app-content">
-        <div class="lang-switch">
-            <button class="lang-btn" onclick="alterarIdioma('pt')">PT</button>
-            <button class="lang-btn" onclick="alterarIdioma('en')">EN</button>
-        </div>
         <h2 data-i18n="appTitle">Dados do Talhão</h2>
         <div class="item"><span class="label" data-i18n="lblTalhao">Talhão</span><span class="value" id="t">-</span></div>
         <div class="item"><span class="label" data-i18n="lblArea">Área do Talhão</span><span class="value" id="a">-</span></div>
@@ -268,7 +266,6 @@
     </div>
 
     <script>
-        // Dicionário Internacionalização Offline
         const i18n = {
             pt: {
                 installTitle: "Instalação Necessária",
@@ -291,26 +288,25 @@
             },
             en: {
                 installTitle: "Installation Required",
-                installText: "To use the Field Data app, you need to install it on your device.",
+                installText: "To use the Field Plot Data app, you need to install it on your device.",
                 btnInstall: "Install Application",
                 iosInstructions: "On iOS/Safari: tap the <strong>Share</strong> button and select <strong>Add to Home Screen</strong>.",
-                appTitle: "Field Data",
-                lblTalhao: "Field",
-                lblArea: "Field Area",
+                appTitle: "Plot Data",
+                lblTalhao: "Plot",
+                lblArea: "Plot Area",
                 lblEspecie: "Species",
                 lblPlantio: "Planting Date",
                 btnMap: "View Map (PDF)",
                 lblScanner: "QR Code Scanner",
                 btnCamOpen: "Open Rear Camera",
                 btnCamClose: "Close Camera",
-                toastSuccess: "Field data loaded successfully!",
+                toastSuccess: "Plot data loaded successfully!",
                 toastInvalidQr: "Invalid QR Code format!",
                 toastCamError: "Unable to access the rear camera.",
                 unitHa: "ha"
             }
         };
 
-        // Idioma Padrão ou Salvo
         let currentLang = localStorage.getItem('app_lang') || (navigator.language.startsWith('en') ? 'en' : 'pt');
 
         function alterarIdioma(lang) {
@@ -318,7 +314,6 @@
             localStorage.setItem('app_lang', lang);
             document.documentElement.lang = lang === 'pt' ? 'pt-BR' : 'en';
 
-            // Atualiza textos na interface
             document.querySelectorAll('[data-i18n]').forEach(el => {
                 const key = el.getAttribute('data-i18n');
                 if (i18n[lang][key]) {
@@ -326,22 +321,18 @@
                 }
             });
 
-            // Atualiza destaques dos botões de idioma
             document.querySelectorAll('.lang-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.textContent.toLowerCase() === lang);
+                btn.classList.toggle('active', btn.textContent.trim().toLowerCase() === lang);
             });
 
-            // Atualiza texto do botão da câmera se estiver ativa/inativa
             const btnCam = document.getElementById('btnToggleCamera');
             if (btnCam) {
                 btnCam.textContent = isScanning ? i18n[lang].btnCamClose : i18n[lang].btnCamOpen;
             }
 
-            // Recarrega valores interpolados caso existam na URL
             carregarDados(false);
         }
 
-        // Verificação se está rodando no modo aplicativo (standalone)
         function verificarStatusApp() {
             const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
                                  window.navigator.standalone || 
@@ -353,7 +344,6 @@
             } else {
                 document.body.classList.remove('is-standalone');
                 
-                // Detecta iOS para exibir instrução alternativa
                 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
                 if (isIOS) {
                     document.getElementById('iosInstructions').style.display = 'block';
@@ -376,7 +366,6 @@
             }, 2000);
         }
 
-        // 1. Leitura dos dados do fragmento (#)
         function carregarDados(exibirToastNotif = true) {
             const hash = window.location.hash.substring(1);
             if (!hash) return;
@@ -402,14 +391,12 @@
             }
         }
 
-        // 2. Registro do Service Worker (PWA)
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('./sw.js')
                 .then(() => console.log('Service Worker ativo.'))
                 .catch((err) => console.log('Erro PWA:', err));
         }
         
-        // 3. Prompt de instalação do PWA
         let deferredPrompt;
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
@@ -426,7 +413,6 @@
             }
         });
 
-        // 4. Scanner Direto via Engine Html5Qrcode
         let html5QrCode = null;
         let isScanning = false;
 
