@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dados do Talhão</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; background: #f4f6f8; margin: 0; padding: 20px; }
+    .card { background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-top: 5px solid #2e7d32; max-width: 360px; margin: auto; }
+    h2 { margin: 0 0 15px 0; color: #2e7d32; font-size: 20px; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+    .item { margin-bottom: 12px; font-size: 15px; }
+    .label { font-weight: 600; color: #666; display: block; font-size: 12px; text-transform: uppercase; }
+    .value { color: #111; font-size: 16px; font-weight: 500; }
+    .btn { display: block; margin-top: 20px; padding: 12px; background: #2e7d32; color: #fff; text-align: center; text-decoration: none; border-radius: 6px; font-weight: bold; }
+    .btn.disabled { background: #ccc; pointer-events: none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Dados do Talhão</h2>
+    <div class="item"><span class="label">Talhão</span><span class="value" id="t">-</span></div>
+    <div class="item"><span class="label">Área do Talhão</span><span class="value" id="a">-</span></div>
+    <div class="item"><span class="label">Espécie</span><span class="value" id="e">-</span></div>
+    <div class="item"><span class="label">Data de Plantio</span><span class="value" id="p">-</span></div>
+    <a id="m" href="#" target="_blank" class="btn">Visualizar Mapa (PDF)</a>
+  </div>
+
+  <script>
+    // 1. Leitura dos dados do fragmento (#)
+    function carregarDados() {
+      const hash = window.location.hash.substring(1);
+      if (!hash) return;
+
+      const [talhao, area, especie, plantio, mapa] = decodeURIComponent(hash).split('|');
+
+      document.getElementById('t').textContent = talhao || '-';
+      document.getElementById('a').textContent = area ? `${area} ha` : '-';
+      document.getElementById('e').textContent = especie || '-';
+      document.getElementById('p').textContent = plantio || '-';
+
+      const btnMapa = document.getElementById('m');
+      if (mapa && mapa !== '#') {
+        btnMapa.href = mapa;
+        btnMapa.classList.remove('disabled');
+      } else {
+        btnMapa.href = '#';
+        btnMapa.classList.add('disabled');
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', carregarDados);
+    window.addEventListener('hashchange', carregarDados);
+
+    // 2. Registro do Service Worker para suporte Offline completo
+    if ('serviceWorker' in navigator) {
+      const swCode = `
+        const CACHE_NAME = 'talhao-v1';
+        self.addEventListener('install', (e) => {
+          e.waitUntil(
+            caches.open(CACHE_NAME).then((cache) => cache.addAll(['./', './index.html']))
+          );
+        });
+        self.addEventListener('fetch', (e) => {
+          e.respondWith(
+            caches.match(e.request).then((res) => res || fetch(e.request))
+          );
+        });
+      `;
+      const blob = new Blob([swCode], { type: 'text/javascript' });
+      const blobUrl = URL.createObjectURL(blob);
+
+      navigator.serviceWorker.register(blobUrl)
+        .catch((err) => console.log('Erro ao registrar Service Worker:', err));
+    }
+  </script>
+</body>
+</html>
