@@ -14,6 +14,62 @@
             padding: 20px;
         }
 
+        /* Overlay de Instalação (Bloqueia o restante) */
+        #installOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #2e7d32;
+            color: #ffffff;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 30px;
+            box-sizing: border-box;
+        }
+
+        .install-box {
+            background: #ffffff;
+            color: #333333;
+            padding: 25px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            max-width: 320px;
+            width: 100%;
+        }
+
+        .install-box h3 {
+            margin-top: 0;
+            color: #2e7d32;
+            font-size: 20px;
+        }
+
+        .install-box p {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.4;
+            margin-bottom: 20px;
+        }
+
+        /* Oculta o conteúdo principal por padrão */
+        .app-content {
+            display: none;
+        }
+
+        /* Exibe o conteúdo apenas quando rodar como App Instalado */
+        body.is-standalone .app-content {
+            display: block;
+        }
+
+        body.is-standalone #installOverlay {
+            display: none !important;
+        }
+
         .card {
             background: #fff;
             border-radius: 10px;
@@ -74,7 +130,7 @@
 
         .btn-install {
             background: #1565c0;
-            display: none;
+            font-size: 15px;
         }
 
         #reader-container {
@@ -91,7 +147,6 @@
             min-height: 200px;
         }
 
-        /* Oculta seletores e botões residuais que a biblioteca possa injetar */
         #reader select, #reader button, #reader span {
             display: none !important;
         }
@@ -142,10 +197,24 @@
 </head>
 
 <body>
+
+    <!-- Overlay Obrigatório de Instalação -->
+    <div id="installOverlay">
+        <div class="install-box">
+            <h3>Instalação Necessária</h3>
+            <p>Para utilizar o aplicativo de Dados do Talhão, você precisa instalá-lo no seu dispositivo.</p>
+            <button id="btnInstalarModal" class="btn btn-install">Instalar Aplicativo</button>
+            <p id="iosInstructions" style="display: none; font-size: 12px; margin-top: 15px; color: #777;">
+                No iOS/Safari: toque no botão de <strong>Compartilhar</strong> e selecione <strong>Adicionar à Tela de Início</strong>.
+            </p>
+        </div>
+    </div>
+
     <!-- Pop-up Notificação Flutuante -->
     <div id="toast" class="toast"></div>
 
-    <div class="card">
+    <!-- Conteúdo Principal (Protegido) -->
+    <div class="card app-content">
         <h2>Dados do Talhão</h2>
         <div class="item"><span class="label">Talhão</span><span class="value" id="t">-</span></div>
         <div class="item"><span class="label">Área do Talhão</span><span class="value" id="a">-</span></div>
@@ -153,9 +222,6 @@
         <div class="item"><span class="label">Data de Plantio</span><span class="value" id="p">-</span></div>
         
         <a id="m" href="#" target="_blank" class="btn">Visualizar Mapa (PDF)</a>
-        
-        <!-- Botão de Instalação do PWA -->
-        <button id="btnInstalar" class="btn btn-install">Instalar Aplicativo</button>
 
         <div id="reader-container">
             <span class="label" style="margin-bottom: 8px;">Scanner QR Code</span>
@@ -165,19 +231,36 @@
     </div>
 
     <script>
-        let toastTimeout = null;
+        // Verificação se está rodando no modo aplicativo (standalone)
+        function verificarStatusApp() {
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                                 window.navigator.standalone || 
+                                 document.referrer.includes('android-app://');
 
-        // Função universal para exibir Pop-up (Toast)
+            if (isStandalone) {
+                document.body.classList.add('is-standalone');
+                carregarDados();
+            } else {
+                document.body.classList.remove('is-standalone');
+                
+                // Detecta iOS para exibir instrução alternativa
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+                if (isIOS) {
+                    document.getElementById('iosInstructions').style.display = 'block';
+                    document.getElementById('btnInstalarModal').style.display = 'none';
+                }
+            }
+        }
+
+        let toastTimeout = null;
         function exibirToast(mensagem, tipo = 'success') {
             const toast = document.getElementById('toast');
             if (!toast) return;
 
             clearTimeout(toastTimeout);
-
             toast.textContent = mensagem;
             toast.className = `toast toast-${tipo} show`;
 
-            // Oculta o toast após 2 segundos (2000 ms)
             toastTimeout = setTimeout(() => {
                 toast.classList.remove('show');
             }, 2000);
@@ -207,9 +290,6 @@
             exibirToast('Dados do talhão carregados com sucesso!', 'success');
         }
 
-        window.addEventListener('DOMContentLoaded', carregarDados);
-        window.addEventListener('hashchange', carregarDados);
-
         // 2. Registro do Service Worker (PWA)
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('./sw.js')
@@ -223,14 +303,12 @@
             e.preventDefault();
             deferredPrompt = e;
 
-            const btnInstalar = document.getElementById('btnInstalar');
-            if (btnInstalar) {
-                btnInstalar.style.display = 'block';
-                btnInstalar.addEventListener('click', () => {
+            const btnInstalarModal = document.getElementById('btnInstalarModal');
+            if (btnInstalarModal) {
+                btnInstalarModal.addEventListener('click', () => {
                     deferredPrompt.prompt();
                     deferredPrompt.userChoice.then(() => { 
                         deferredPrompt = null;
-                        btnInstalar.style.display = 'none';
                     });
                 });
             }
@@ -304,6 +382,9 @@
                 iniciarCameraDirect();
             }
         });
+
+        window.addEventListener('DOMContentLoaded', verificarStatusApp);
+        window.addEventListener('hashchange', carregarDados);
 
         window.addEventListener('visibilitychange', () => {
             if (document.hidden && isScanning) {
