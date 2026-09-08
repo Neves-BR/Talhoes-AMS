@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="./Tucano-mini.png">
     <link id="manifestLink" rel="manifest" href="manifest.json">
-    <title>Informações de campo / Field Data - Tucano Florestal</title>
+    <title>Informações de campo - Tucano Florestal</title>
     <style>
         body {
             font-family: system-ui, -apple-system, sans-serif;
@@ -267,7 +267,8 @@
             color: #ffffff;
         }
     </style>
-    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8"></script>
+<base target="_blank">
 </head>
 
 <body>
@@ -416,23 +417,34 @@
             }
         }
 
-        function atualizarManifest(lang) {
-            const manifestData = {
-                "name": i18n[lang].appName,
-                "short_name": i18n[lang].appShortName,
-                "start_url": "./index.html",
-                "display": "standalone",
-                "background_color": "#f4f6f8",
-                "theme_color": "#2e7d32",
-                "icons": [
-                    {
-                        "src": "./Tucano-mini.png",
-                        "sizes": "512x512",
-                        "type": "image/png",
-                        "purpose": "any maskable"
-                    }
-                ]
-            };
+        async function atualizarManifest(lang) {
+            // Fonte única de verdade: lê o manifest.json versionado e
+            // sobrescreve apenas os textos que dependem do idioma.
+            let manifestData;
+            try {
+                const response = await fetch('./manifest.json');
+                if (!response.ok) throw new Error('manifest.json não encontrado');
+                manifestData = await response.json();
+            } catch (e) {
+                // Fallback caso o fetch falhe (ex.: aberto via file://)
+                manifestData = {
+                    "start_url": "./index.html",
+                    "display": "standalone",
+                    "background_color": "#f4f6f8",
+                    "theme_color": "#2e7d32",
+                    "icons": [
+                        {
+                            "src": "./Tucano-mini.png",
+                            "sizes": "512x512",
+                            "type": "image/png",
+                            "purpose": "any maskable"
+                        }
+                    ]
+                };
+            }
+
+            manifestData.name = i18n[lang].appName;
+            manifestData.short_name = i18n[lang].appShortName;
 
             const stringData = JSON.stringify(manifestData);
             const blob = new Blob([stringData], { type: 'application/json' });
@@ -440,6 +452,11 @@
 
             const manifestLink = document.getElementById('manifestLink');
             if (manifestLink) {
+                // Libera o Blob anterior para não vazar memória
+                const oldHref = manifestLink.getAttribute('href');
+                if (oldHref && oldHref.startsWith('blob:')) {
+                    URL.revokeObjectURL(oldHref);
+                }
                 manifestLink.setAttribute('href', manifestUrl);
             }
         }
@@ -508,7 +525,15 @@
             const hash = window.location.hash.substring(1);
             if (!hash) return;
 
-            const [talhao, area, especie, plantio, mapa] = decodeURIComponent(hash).split('|');
+            let dadosDecodificados;
+            try {
+                dadosDecodificados = decodeURIComponent(hash);
+            } catch (e) {
+                // Hash com sequência malformada (ex.: '%' solto vindo de QR externo)
+                dadosDecodificados = hash;
+            }
+
+            const [talhao, area, especie, plantio, mapa] = dadosDecodificados.split('|');
 
             document.getElementById('t').textContent = talhao || '-';
             document.getElementById('a').textContent = area ? `${area} ${i18n[currentLang].unitHa}` : '-';
@@ -535,18 +560,25 @@
                 .catch((err) => console.log('Erro PWA:', err));
         }
 
-        let deferredPrompt;
+        let deferredPrompt = null;
+        let installHandlerVinculado = false;
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
 
             const btnInstalarModal = document.getElementById('btnInstalarModal');
-            if (btnInstalarModal) {
-                btnInstalarModal.addEventListener('click', () => {
+            // Vincula o clique uma única vez, para não acumular listeners
+            if (btnInstalarModal && !installHandlerVinculado) {
+                installHandlerVinculado = true;
+                btnInstalarModal.addEventListener('click', async () => {
+                    if (!deferredPrompt) return;
                     deferredPrompt.prompt();
-                    deferredPrompt.userChoice.then(() => {
-                        deferredPrompt = null;
-                    });
+                    try {
+                        await deferredPrompt.userChoice;
+                    } catch (err) {
+                        console.log('Escolha de instalação interrompida:', err);
+                    }
+                    deferredPrompt = null;
                 });
             }
         });
