@@ -1,4 +1,4 @@
-const CACHE_NAME = 'talhao-v1';
+const CACHE_NAME = 'talhao-v2';
 const ASSETS = ['./', './index.html'];
 
 self.addEventListener('install', (e) => {
