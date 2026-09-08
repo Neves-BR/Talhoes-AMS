@@ -1,4 +1,6 @@
 const CACHE_NAME = 'v1.8.6';
+const DEVELOPER = 'Guilherme Neves';
+
 const ASSETS = [
   './',
   './index.html',
