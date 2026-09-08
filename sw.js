@@ -1,8 +1,10 @@
-const CACHE_NAME = 'v1.8.4';
+const CACHE_NAME = 'v1.8.5';
 const ASSETS = [
   './',
   './index.html',
-  'https://unpkg.com/html5-qrcode' // Adicionado para cachear a biblioteca da câmera
+  './manifest.json',
+  './Tucano-mini.png',
+  'https://unpkg.com/html5-qrcode'
 ];
 
 // 1. Instalação: Salva os arquivos no cache e força a ativação imediata
@@ -14,7 +16,7 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// 2. Ativação: Limpa caches antigos (ex: v1, v2, v6) automaticamente
+// 2. Ativação: Limpa caches antigos automaticamente
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
@@ -29,7 +31,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// 3. Interceptação de requisições (Cache com Fallback para Rede)
+// 3. Interceptação de requisições (Cache First com fallback para Rede)
 self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
