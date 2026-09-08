@@ -100,42 +100,52 @@
             background: #37474f;
             margin-bottom: 10px;
         }
-        .alert-success {
-            background-color: #e8f5e9;
-            color: #2e7d32;
-            border: 1px solid #c8e6c9;
-            padding: 10px 12px;
-            border-radius: 6px;
+
+        /* Pop-up Flutuante (Toast) para Mobile */
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            z-index: 9999;
+            width: 85%;
+            max-width: 320px;
+            padding: 12px 16px;
+            border-radius: 8px;
             font-size: 14px;
-            font-weight: 500;
-            margin-bottom: 15px;
-            display: none; /* Inicia oculto */
+            font-weight: 600;
             text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease-in-out;
+            pointer-events: none;
         }
-        .alert-error {
-            background-color: #ffebee;
-            color: #c62828;
-            border: 1px solid #ef9a9a;
-            padding: 10px 12px;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 500;
-            margin-bottom: 15px;
-            display: none;
-            text-align: center;
+
+        .toast.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast-success {
+            background-color: #2e7d32;
+            color: #ffffff;
+        }
+
+        .toast-error {
+            background-color: #c62828;
+            color: #ffffff;
         }
     </style>
     <script src="https://unpkg.com/html5-qrcode"></script>
 </head>
 
 <body>
+    <!-- Pop-up Notificação Flutuante -->
+    <div id="toast" class="toast"></div>
+
     <div class="card">
-        <div id="alertSuccess" class="alert-success">
-            Dados do talhão carregados com sucesso!
-        </div>
-        <div id="alertError" class="alert-error">
-            Formato de QR Code inválido!
-        </div>
         <h2>Dados do Talhão</h2>
         <div class="item"><span class="label">Talhão</span><span class="value" id="t">-</span></div>
         <div class="item"><span class="label">Área do Talhão</span><span class="value" id="a">-</span></div>
@@ -155,6 +165,25 @@
     </div>
 
     <script>
+        let toastTimeout = null;
+
+        // Função universal para exibir Pop-up (Toast)
+        function exibirToast(mensagem, tipo = 'success') {
+            const toast = document.getElementById('toast');
+            if (!toast) return;
+
+            // Limpa o tempo anterior caso um novo toast seja disparado rapidamente
+            clearTimeout(toastTimeout);
+
+            toast.textContent = mensagem;
+            toast.className = `toast toast-${tipo} show`;
+
+            // Oculta o toast após 2 segundos (2000 ms)
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+
         // 1. Leitura dos dados do fragmento (#)
         function carregarDados() {
             const hash = window.location.hash.substring(1);
@@ -176,16 +205,8 @@
                 btnMapa.classList.add('disabled');
             }
         
-            // --- Exibe o aviso de sucesso ---
-            const alertBox = document.getElementById('alertSuccess');
-            if (alertBox) {
-                alertBox.style.display = 'block';
-        
-                // Opcional: Oculta o aviso automaticamente após 4 segundos
-                setTimeout(() => {
-                    alertBox.style.display = 'none';
-                }, 4000);
-            }
+            // Dispara o toast de sucesso
+            exibirToast('Dados do talhão carregados com sucesso!', 'success');
         }
 
         window.addEventListener('DOMContentLoaded', carregarDados);
@@ -235,13 +256,15 @@
                     window.location.hash = decodedText;
                     carregarDados();
                     pararCamera();
+                } else {
+                    // Trata QR Code com dados inválidos
+                    exibirToast('Formato de QR Code inválido!', 'error');
                 }
             };
 
             const config = { fps: 10, qrbox: { width: 220, height: 220 } };
 
             try {
-                // Força a câmera traseira diretamente via restrição do navegador (evita interface UI de seleção)
                 await html5QrCode.start(
                     { facingMode: { exact: "environment" } },
                     config,
@@ -250,7 +273,6 @@
                 isScanning = true;
                 document.getElementById('btnToggleCamera').textContent = "Fechar Câmera";
             } catch (err) {
-                // Fallback caso a restrição estrita "exact" falhe em alguns navegadores
                 try {
                     await html5QrCode.start(
                         { facingMode: "environment" },
@@ -261,7 +283,7 @@
                     document.getElementById('btnToggleCamera').textContent = "Fechar Câmera";
                 } catch (fallbackErr) {
                     console.error("Erro na câmera:", fallbackErr);
-                    alert("Não foi possível acessar a câmera traseira.");
+                    exibirToast('Não foi possível acessar a câmera traseira.', 'error');
                 }
             }
         }
@@ -277,17 +299,7 @@
                 document.getElementById('btnToggleCamera').textContent = "Abrir Câmera Traseira";
             }
         }
-        function exibirErro(mensagem) {
-            const errorBox = document.getElementById('alertError');
-            if (errorBox) {
-                errorBox.textContent = `❌ ${mensagem}`;
-                errorBox.style.display = 'block';
-        
-                setTimeout(() => {
-                    errorBox.style.display = 'none';
-                }, 4000);
-            }
-        }
+
         document.getElementById('btnToggleCamera').addEventListener('click', () => {
             if (isScanning) {
                 pararCamera();
@@ -296,14 +308,12 @@
             }
         });
 
-        // Desliga a câmera automaticamente ao minimizar ou mudar de tela
         window.addEventListener('visibilitychange', () => {
             if (document.hidden && isScanning) {
                 pararCamera();
             }
         });
         window.addEventListener('pagehide', pararCamera);
-        
     </script>
 </body>
 
