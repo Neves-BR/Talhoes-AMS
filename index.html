@@ -171,11 +171,26 @@
             }
         });
 
-        // 4. Scanner de QR Code forçando Câmera Traseira (facingMode: "environment")
+        // 4. Liberação preventiva de faixas de mídia (Hardware Camera Release)
+        async function liberarCameraHardware() {
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    stream.getTracks().forEach(track => track.stop());
+                } catch (e) {
+                    // Câmera já liberada ou sem permissão
+                }
+            }
+        }
+
+        // 5. Gerenciamento da Câmera Traseira
         let html5QrCode;
         let isScanning = false;
 
-        function iniciarCameraTraseira() {
+        async function iniciarCameraTraseira() {
+            // Força a liberação prévia de qualquer captura pendente
+            await liberarCameraHardware();
+
             if (!html5QrCode) {
                 html5QrCode = new Html5Qrcode("reader");
             }
@@ -192,26 +207,36 @@
 
             const config = { fps: 10, qrbox: { width: 220, height: 220 } };
 
-            // "environment" força o uso da câmera traseira do celular
-            html5QrCode.start(
-                { facingMode: "environment" },
-                config,
-                qrCodeSuccessCallback
-            ).then(() => {
+            try {
+                // Tenta abrir com a preferência de câmera traseira
+                await html5QrCode.start(
+                    { facingMode: "environment" },
+                    config,
+                    qrCodeSuccessCallback
+                );
                 isScanning = true;
                 document.getElementById('btnToggleCamera').textContent = "Parar Câmera";
-            }).catch((err) => {
+            } catch (err) {
                 console.error("Erro ao abrir câmera traseira:", err);
-                alert("Não foi possível acessar a câmera traseira. Verifique as permissões do navegador.");
-            });
+                
+                // Trata especificamente o NotReadableError orientando o usuário
+                if (err.toString().includes("NotReadableError") || err.name === "NotReadableError") {
+                    alert("A câmera está sendo usada por outra aba/aplicativo.\n\nPor favor, feche a aba antiga do navegador e tente novamente.");
+                } else {
+                    alert("Não foi possível acessar a câmera traseira. Verifique as permissões.");
+                }
+            }
         }
 
-        function pararCamera() {
+        async function pararCamera() {
             if (html5QrCode && isScanning) {
-                html5QrCode.stop().then(() => {
-                    isScanning = false;
-                    document.getElementById('btnToggleCamera').textContent = "Iniciar Câmera";
-                });
+                try {
+                    await html5QrCode.stop();
+                } catch (e) {
+                    console.log("Erro ao parar câmera:", e);
+                }
+                isScanning = false;
+                document.getElementById('btnToggleCamera').textContent = "Iniciar Câmera";
             }
         }
 
@@ -222,6 +247,15 @@
                 iniciarCameraTraseira();
             }
         });
+
+        // Para a câmera se a pessoa minimizar o app ou trocar de aba
+        window.addEventListener('visibilitychange', () => {
+            if (document.hidden && isScanning) {
+                pararCamera();
+            }
+        });
+
+        window.addEventListener('pagehide', pararCamera);
     </script>
 </body>
 
