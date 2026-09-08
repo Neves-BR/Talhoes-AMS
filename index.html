@@ -43,22 +43,26 @@
             color: #ffffff;
         }
 
-        /* Rodapé Fixo Global (Apenas para a tela de instalação) */
+        /* Rodapé Fixo Global - Centralizado para a tela de instalação */
         .global-footer {
             position: fixed;
-            bottom: 10px;
-            left: 50%;
-            transform: translateX(-50%);
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            margin: 0 auto;
+            width: fit-content;
+            max-width: 90%;
             z-index: 20000;
             font-size: 11px;
             color: #ffffff;
             background: rgba(0, 0, 0, 0.65);
-            padding: 4px 12px;
-            border-radius: 12px;
+            padding: 6px 16px;
+            border-radius: 20px;
             backdrop-filter: blur(4px);
             pointer-events: none;
             white-space: nowrap;
             text-align: center;
+            box-sizing: border-box;
         }
 
         /* Oculta o rodapé global quando o app estiver instalado */
@@ -268,7 +272,7 @@
         <button class="lang-btn" onclick="alterarIdioma('en')">EN</button>
     </div>
 
-    <!-- Rodapé Fixo na Tela de Instalação -->
+    <!-- Rodapé Fixo e Centralizado na Tela de Instalação -->
     <div class="global-footer">
         <span data-i18n="lblDevBy">Desenvolvido por</span> Guilherme Neves | <span class="app-version-val">v1.0.0</span>
     </div>
