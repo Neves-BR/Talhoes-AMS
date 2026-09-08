@@ -14,30 +14,26 @@
             padding: 20px;
         }
 
-        /* Suporte para Posicionamento Interno */
-        .install-box, .card {
-            position: relative;
-        }
-
-        /* Seletor de Idioma Integrado */
+        /* Seletor de Idioma Unificado e Fixo */
         .lang-switch {
-            position: absolute;
+            position: fixed;
             top: 15px;
             right: 15px;
             display: flex;
-            gap: 4px;
-            z-index: 100;
+            gap: 5px;
+            z-index: 20000; /* Fica acima do overlay de instalação */
         }
 
         .lang-btn {
-            background: #f0f0f0;
+            background: #ffffff;
             border: 1px solid #2e7d32;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 11px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
             font-weight: bold;
             cursor: pointer;
             color: #2e7d32;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
             transition: all 0.2s ease;
         }
 
@@ -53,7 +49,7 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: #ffd966;
+            background: #233621;
             color: #ffffff;
             z-index: 10000;
             display: flex;
@@ -73,15 +69,12 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             max-width: 320px;
             width: 100%;
-            box-sizing: border-box;
         }
 
         .install-box h3 {
             margin-top: 0;
             color: #2e7d32;
             font-size: 20px;
-            padding-right: 75px; /* Margem de segurança para o seletor de idioma */
-            text-align: left;
         }
 
         .install-box p {
@@ -89,12 +82,12 @@
             color: #555;
             line-height: 1.4;
             margin-bottom: 20px;
-            text-align: left;
         }
 
         /* Oculta o conteúdo principal por padrão */
         .app-content {
             display: none;
+            margin-top: 40px;
         }
 
         /* Exibe o conteúdo apenas quando rodar como App Instalado */
@@ -114,7 +107,6 @@
             border-top: 5px solid #2e7d32;
             max-width: 360px;
             margin: auto;
-            box-sizing: border-box;
         }
 
         h2 {
@@ -123,7 +115,6 @@
             font-size: 20px;
             border-bottom: 1px solid #eee;
             padding-bottom: 8px;
-            padding-right: 75px; /* Margem de segurança para o seletor de idioma */
         }
 
         .item {
@@ -200,7 +191,7 @@
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%) translateY(20px);
-            z-index: 99999;
+            z-index: 9999;
             width: 85%;
             max-width: 320px;
             padding: 12px 16px;
@@ -236,13 +227,15 @@
 
 <body>
 
+    <!-- Seletor Global de Idioma -->
+    <div class="lang-switch">
+        <button class="lang-btn" onclick="alterarIdioma('pt')">PT</button>
+        <button class="lang-btn" onclick="alterarIdioma('en')">EN</button>
+    </div>
+
     <!-- Overlay Obrigatório de Instalação -->
     <div id="installOverlay">
         <div class="install-box">
-            <div class="lang-switch">
-                <button class="lang-btn" onclick="alterarIdioma('pt')">PT</button>
-                <button class="lang-btn" onclick="alterarIdioma('en')">EN</button>
-            </div>
             <h3 data-i18n="installTitle">Instalação Necessária</h3>
             <p data-i18n="installText">Para utilizar o aplicativo de Dados do Talhão, você precisa instalá-lo no seu dispositivo.</p>
             <button id="btnInstalarModal" class="btn btn-install" data-i18n="btnInstall">Instalar Aplicativo</button>
@@ -257,10 +250,6 @@
 
     <!-- Conteúdo Principal (Protegido) -->
     <div class="card app-content">
-        <div class="lang-switch">
-            <button class="lang-btn" onclick="alterarIdioma('pt')">PT</button>
-            <button class="lang-btn" onclick="alterarIdioma('en')">EN</button>
-        </div>
         <h2 data-i18n="appTitle">Dados do Talhão</h2>
         <div class="item"><span class="label" data-i18n="lblTalhao">Talhão</span><span class="value" id="t">-</span></div>
         <div class="item"><span class="label" data-i18n="lblArea">Área do Talhão</span><span class="value" id="a">-</span></div>
