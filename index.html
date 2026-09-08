@@ -296,6 +296,11 @@
     <div id="toast" class="toast"></div>
 
     <div class="card app-content">
+        <!-- Adicionado o logotipo acima do título -->
+        <div style="text-align: center; margin-bottom: 10px;">
+            <img src="./Tucano-mini.png" alt="Logo Tucano Florestal" style="width: 65px; height: auto; display: inline-block;">
+        </div>
+    
         <h2 data-i18n="appTitle">Informações de campo - Tucano Florestal</h2>
         <div class="item"><span class="label" data-i18n="lblTalhao">Talhão</span><span class="value" id="t">-</span></div>
         <div class="item"><span class="label" data-i18n="lblArea">Área do Talhão</span><span class="value" id="a">-</span></div>
@@ -303,13 +308,13 @@
         <div class="item"><span class="label" data-i18n="lblPlantio">Data de Plantio</span><span class="value" id="p">-</span></div>
         
         <a id="m" href="#" target="_blank" class="btn" data-i18n="btnMap">Visualizar Mapa (PDF)</a>
-
+    
         <div id="reader-container">
             <span class="label" style="margin-bottom: 8px;" data-i18n="lblScanner">Scanner QR Code</span>
             <button id="btnToggleCamera" class="btn btn-scanner" data-i18n="btnCamOpen">Abrir Câmera Traseira</button>
             <div id="reader"></div>
         </div>
-
+    
         <div class="card-footer">
             <span data-i18n="lblDevBy">Desenvolvido por</span> <strong>Guilherme Neves</strong><br>
             <span data-i18n="lblVersion">Versão</span>: <span class="app-version-val">v1.8.5</span>
