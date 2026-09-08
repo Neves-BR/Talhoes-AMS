@@ -1,4 +1,4 @@
-const CACHE_NAME = 'v1.8.9';
+const CACHE_NAME = 'v1.9.0';
 const DEVELOPER = 'Guilherme Neves';
 
 const ASSETS = [
