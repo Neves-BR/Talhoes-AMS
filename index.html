@@ -47,11 +47,11 @@
         .global-footer {
             position: fixed;
             bottom: 20px;
-            left: 0;
-            right: 0;
-            margin: 0 auto;
-            width: fit-content;
-            max-width: 90%;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
             z-index: 20000;
             font-size: 11px;
             color: #ffffff;
@@ -63,6 +63,8 @@
             white-space: nowrap;
             text-align: center;
             box-sizing: border-box;
+            width: max-content;
+            max-width: 90vw;
         }
 
         /* Oculta o rodapé global quando o app estiver instalado */
@@ -110,6 +112,14 @@
             color: #555;
             line-height: 1.4;
             margin-bottom: 20px;
+        }
+
+        .install-note {
+            font-size: 12px;
+            color: #777;
+            margin-top: 12px;
+            margin-bottom: 0;
+            line-height: 1.35;
         }
 
         /* Oculta o conteúdo principal por padrão */
@@ -274,7 +284,7 @@
 
     <!-- Rodapé Fixo e Centralizado na Tela de Instalação -->
     <div class="global-footer">
-        <span data-i18n="lblDevBy">Desenvolvido por</span> Guilherme Neves | <span class="app-version-val">v1.0.0</span>
+        <div><span data-i18n="lblDevBy">Desenvolvido por</span> Guilherme Neves | <span class="app-version-val">v1.0.0</span></div>
     </div>
 
     <!-- Overlay Obrigatório de Instalação -->
@@ -283,6 +293,7 @@
             <h3 data-i18n="installTitle">Instalação Necessária</h3>
             <p data-i18n="installText">Para utilizar o aplicativo de Informações de campo, você precisa instalá-lo no seu dispositivo.</p>
             <button id="btnInstalarModal" class="btn btn-install" data-i18n="btnInstall">Instalar Aplicativo</button>
+            <p class="install-note" data-i18n="installSafeNote">🔒 Instalação rápida e 100% segura. O aplicativo não ocupa a memória do seu celular e não acessa seus dados pessoais.</p>
             <p id="iosInstructions" style="display: none; font-size: 12px; margin-top: 15px; color: #777;" data-i18n="iosInstructions">
                 No iOS/Safari: toque no botão de <strong>Compartilhar</strong> e selecione <strong>Adicionar à Tela de Início</strong>.
             </p>
@@ -323,6 +334,7 @@
                 installTitle: "Instalação Necessária",
                 installText: "Para utilizar o aplicativo de Informações de campo, você precisa instalá-lo no seu dispositivo.",
                 btnInstall: "Instalar Aplicativo",
+                installSafeNote: "🔒 Instalação rápida e 100% segura. O aplicativo não ocupa a memória do seu celular e não acessa seus dados pessoais.",
                 iosInstructions: "No iOS/Safari: toque no botão de <strong>Compartilhar</strong> e selecione <strong>Adicionar à Tela de Início</strong>.",
                 appTitle: "Informações de campo - Tucano Florestal",
                 lblTalhao: "Talhão",
@@ -346,6 +358,7 @@
                 installTitle: "Installation Required",
                 installText: "To use the Field Data app, you need to install it on your device.",
                 btnInstall: "Install Application",
+                installSafeNote: "🔒 Fast and 100% safe installation. The app uses almost no storage and does not access your personal data.",
                 iosInstructions: "On iOS/Safari: tap the <strong>Share</strong> button and select <strong>Add to Home Screen</strong>.",
                 appTitle: "Field Data - Tucano Florestal",
                 lblTalhao: "Field",
