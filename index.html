@@ -394,8 +394,8 @@
                 if (!response.ok) return;
                 const text = await response.text();
 
-                // Extrai CACHE_NAME, VERSION ou CACHE_VERSION
-                const matchVersao = text.match(/(?:CACHE_NAME|VERSION|CACHE_VERSION)\s*=\s*['"`]([^'"`]+)['"`]/i);
+                // Extrai CACHE_VERSION
+                const matchVersao = text.match(/(?:CACHE_NAME)\s*=\s*['"`]([^'"`]+)['"`]/i);
                 if (matchVersao && matchVersao[1]) {
                     const versao = matchVersao[1];
                     document.querySelectorAll('.app-version-val').forEach(el => {
@@ -403,8 +403,8 @@
                     });
                 }
 
-                // Extrai DEVELOPER ou AUTHOR
-                const matchDev = text.match(/(?:DEVELOPER|AUTHOR|DEV_NAME)\s*=\s*['"`]([^'"`]+)['"`]/i);
+                // Extrai DEVELOPER
+                const matchDev = text.match(/(?:DEVELOPER)\s*=\s*['"`]([^'"`]+)['"`]/i);
                 if (matchDev && matchDev[1]) {
                     const dev = matchDev[1];
                     document.querySelectorAll('.app-dev-val').forEach(el => {
