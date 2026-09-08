@@ -100,12 +100,42 @@
             background: #37474f;
             margin-bottom: 10px;
         }
+        .alert-success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 15px;
+            display: none; /* Inicia oculto */
+            text-align: center;
+        }
+        .alert-error {
+            background-color: #ffebee;
+            color: #c62828;
+            border: 1px solid #ef9a9a;
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 15px;
+            display: none;
+            text-align: center;
+        }
     </style>
     <script src="https://unpkg.com/html5-qrcode"></script>
 </head>
 
 <body>
     <div class="card">
+        <div id="alertSuccess" class="alert-success">
+            Dados do talhão carregados com sucesso!
+        </div>
+        <div id="alertError" class="alert-error">
+            Formato de QR Code inválido!
+        </div>
         <h2>Dados do Talhão</h2>
         <div class="item"><span class="label">Talhão</span><span class="value" id="t">-</span></div>
         <div class="item"><span class="label">Área do Talhão</span><span class="value" id="a">-</span></div>
@@ -129,14 +159,14 @@
         function carregarDados() {
             const hash = window.location.hash.substring(1);
             if (!hash) return;
-
+        
             const [talhao, area, especie, plantio, mapa] = decodeURIComponent(hash).split('|');
-
+        
             document.getElementById('t').textContent = talhao || '-';
             document.getElementById('a').textContent = area ? `${area} ha` : '-';
             document.getElementById('e').textContent = especie || '-';
             document.getElementById('p').textContent = plantio || '-';
-
+        
             const btnMapa = document.getElementById('m');
             if (mapa && mapa !== '#') {
                 btnMapa.href = mapa;
@@ -144,6 +174,17 @@
             } else {
                 btnMapa.href = '#';
                 btnMapa.classList.add('disabled');
+            }
+        
+            // --- Exibe o aviso de sucesso ---
+            const alertBox = document.getElementById('alertSuccess');
+            if (alertBox) {
+                alertBox.style.display = 'block';
+        
+                // Opcional: Oculta o aviso automaticamente após 4 segundos
+                setTimeout(() => {
+                    alertBox.style.display = 'none';
+                }, 4000);
             }
         }
 
@@ -156,7 +197,7 @@
                 .then(() => console.log('Service Worker ativo.'))
                 .catch((err) => console.log('Erro PWA:', err));
         }
-
+        
         // 3. Prompt de instalação do PWA
         let deferredPrompt;
         window.addEventListener('beforeinstallprompt', (e) => {
@@ -252,6 +293,17 @@
             }
         });
         window.addEventListener('pagehide', pararCamera);
+        function exibirErro(mensagem) {
+            const errorBox = document.getElementById('alertError');
+            if (errorBox) {
+                errorBox.textContent = `❌ ${mensagem}`;
+                errorBox.style.display = 'block';
+        
+                setTimeout(() => {
+                    errorBox.style.display = 'none';
+                }, 4000);
+            }
+        }
     </script>
 </body>
 
