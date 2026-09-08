@@ -87,8 +87,13 @@
             width: 100%;
             border-radius: 8px;
             overflow: hidden;
-            background: #000;
-            min-height: 250px;
+            background: #222;
+            min-height: 200px;
+        }
+
+        /* Oculta seletores e botões residuais que a biblioteca possa injetar */
+        #reader select, #reader button, #reader span {
+            display: none !important;
         }
 
         .btn-scanner {
@@ -113,8 +118,8 @@
         <button id="btnInstalar" class="btn btn-install">Instalar Aplicativo</button>
 
         <div id="reader-container">
-            <span class="label" style="margin-bottom: 8px;">Scanner de Câmera (Traseira)</span>
-            <button id="btnToggleCamera" class="btn btn-scanner">Iniciar Câmera</button>
+            <span class="label" style="margin-bottom: 8px;">Scanner QR Code</span>
+            <button id="btnToggleCamera" class="btn btn-scanner">Abrir Câmera Traseira</button>
             <div id="reader"></div>
         </div>
     </div>
@@ -145,7 +150,7 @@
         window.addEventListener('DOMContentLoaded', carregarDados);
         window.addEventListener('hashchange', carregarDados);
 
-        // 2. Registro do Service Worker
+        // 2. Registro do Service Worker (PWA)
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('./sw.js')
                 .then(() => console.log('Service Worker ativo.'))
@@ -171,26 +176,11 @@
             }
         });
 
-        // 4. Liberação preventiva de faixas de mídia (Hardware Camera Release)
-        async function liberarCameraHardware() {
-            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                    stream.getTracks().forEach(track => track.stop());
-                } catch (e) {
-                    // Câmera já liberada ou sem permissão
-                }
-            }
-        }
-
-        // 5. Gerenciamento da Câmera Traseira
-        let html5QrCode;
+        // 4. Scanner Direto via Engine Html5Qrcode
+        let html5QrCode = null;
         let isScanning = false;
 
-        async function iniciarCameraTraseira() {
-            // Força a liberação prévia de qualquer captura pendente
-            await liberarCameraHardware();
-
+        async function iniciarCameraDirect() {
             if (!html5QrCode) {
                 html5QrCode = new Html5Qrcode("reader");
             }
@@ -199,31 +189,38 @@
                 if (decodedText.includes('#')) {
                     window.location.hash = decodedText.split('#')[1];
                     carregarDados();
+                    pararCamera();
                 } else if (decodedText.includes('|')) {
                     window.location.hash = decodedText;
                     carregarDados();
+                    pararCamera();
                 }
             };
 
             const config = { fps: 10, qrbox: { width: 220, height: 220 } };
 
             try {
-                // Tenta abrir com a preferência de câmera traseira
+                // Força a câmera traseira diretamente via restrição do navegador (evita interface UI de seleção)
                 await html5QrCode.start(
-                    { facingMode: "environment" },
+                    { facingMode: { exact: "environment" } },
                     config,
                     qrCodeSuccessCallback
                 );
                 isScanning = true;
-                document.getElementById('btnToggleCamera').textContent = "Parar Câmera";
+                document.getElementById('btnToggleCamera').textContent = "Fechar Câmera";
             } catch (err) {
-                console.error("Erro ao abrir câmera traseira:", err);
-                
-                // Trata especificamente o NotReadableError orientando o usuário
-                if (err.toString().includes("NotReadableError") || err.name === "NotReadableError") {
-                    alert("A câmera está sendo usada por outra aba/aplicativo.\n\nPor favor, feche a aba antiga do navegador e tente novamente.");
-                } else {
-                    alert("Não foi possível acessar a câmera traseira. Verifique as permissões.");
+                // Fallback caso a restrição estrita "exact" falhe em alguns navegadores
+                try {
+                    await html5QrCode.start(
+                        { facingMode: "environment" },
+                        config,
+                        qrCodeSuccessCallback
+                    );
+                    isScanning = true;
+                    document.getElementById('btnToggleCamera').textContent = "Fechar Câmera";
+                } catch (fallbackErr) {
+                    console.error("Erro na câmera:", fallbackErr);
+                    alert("Não foi possível acessar a câmera traseira.");
                 }
             }
         }
@@ -233,10 +230,10 @@
                 try {
                     await html5QrCode.stop();
                 } catch (e) {
-                    console.log("Erro ao parar câmera:", e);
+                    console.log("Erro ao desligar a câmera:", e);
                 }
                 isScanning = false;
-                document.getElementById('btnToggleCamera').textContent = "Iniciar Câmera";
+                document.getElementById('btnToggleCamera').textContent = "Abrir Câmera Traseira";
             }
         }
 
@@ -244,17 +241,16 @@
             if (isScanning) {
                 pararCamera();
             } else {
-                iniciarCameraTraseira();
+                iniciarCameraDirect();
             }
         });
 
-        // Para a câmera se a pessoa minimizar o app ou trocar de aba
+        // Desliga a câmera automaticamente ao minimizar ou mudar de tela
         window.addEventListener('visibilitychange', () => {
             if (document.hidden && isScanning) {
                 pararCamera();
             }
         });
-
         window.addEventListener('pagehide', pararCamera);
     </script>
 </body>
