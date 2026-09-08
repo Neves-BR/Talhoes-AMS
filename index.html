@@ -12,7 +12,7 @@
             background: #f4f6f8;
             margin: 0;
             padding: 20px;
-            padding-bottom: 50px; /* Espaço para o rodapé fixo não cobrir elementos */
+            padding-bottom: 50px; /* Espaço para o rodapé não cobrir elementos */
         }
 
         /* Seletor de Idioma Unificado e Fixo */
@@ -43,19 +43,27 @@
             color: #ffffff;
         }
 
-        /* Rodapé Fixo Global (z-index 20000) */
+        /* Rodapé Fixo Global (Apenas para a tela de instalação) */
         .global-footer {
             position: fixed;
             bottom: 10px;
-            left: 15px;
+            left: 50%;
+            transform: translateX(-50%);
             z-index: 20000;
             font-size: 11px;
             color: #ffffff;
             background: rgba(0, 0, 0, 0.65);
-            padding: 4px 10px;
+            padding: 4px 12px;
             border-radius: 12px;
             backdrop-filter: blur(4px);
             pointer-events: none;
+            white-space: nowrap;
+            text-align: center;
+        }
+
+        /* Oculta o rodapé global quando o app estiver instalado */
+        body.is-standalone .global-footer {
+            display: none !important;
         }
 
         /* Overlay de Instalação (Bloqueia o restante) */
@@ -131,6 +139,7 @@
             font-size: 20px;
             border-bottom: 1px solid #eee;
             padding-bottom: 8px;
+            text-align: center;
         }
 
         .item {
@@ -201,7 +210,7 @@
             margin-bottom: 10px;
         }
 
-        /* Rodapé interno do Card */
+        /* Rodapé interno do Card (Centralizado) */
         .card-footer {
             margin-top: 20px;
             padding-top: 12px;
@@ -259,9 +268,9 @@
         <button class="lang-btn" onclick="alterarIdioma('en')">EN</button>
     </div>
 
-    <!-- Rodapé Fixo Global (z-index 20000) -->
+    <!-- Rodapé Fixo na Tela de Instalação -->
     <div class="global-footer">
-        <span data-i18n="lblDevBy">Dev:</span> Guilherme Neves | <span class="app-version-val">v1.0.0</span>
+        <span data-i18n="lblDevBy">Desenvolvido por</span> Guilherme Neves | <span class="app-version-val">v1.0.0</span>
     </div>
 
     <!-- Overlay Obrigatório de Instalação -->
@@ -295,7 +304,7 @@
             <div id="reader"></div>
         </div>
 
-        <!-- Rodapé Interno do App -->
+        <!-- Rodapé Interno do App (Centralizado) -->
         <div class="card-footer">
             <span data-i18n="lblDevBy">Desenvolvido por</span> <strong>Guilherme Neves</strong><br>
             <span data-i18n="lblVersion">Versão</span>: <span class="app-version-val">v1.0.0</span>
