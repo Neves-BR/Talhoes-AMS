@@ -5,13 +5,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="manifest" href="manifest.json">
-    <title>Dados do Talhão</title>
+    <title>Dados do Talhão / Plot Data</title>
     <style>
         body {
             font-family: system-ui, -apple-system, sans-serif;
             background: #f4f6f8;
             margin: 0;
             padding: 20px;
+        }
+
+        /* Seletor de Idioma */
+        .lang-switch {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            gap: 5px;
+            z-index: 10001;
+        }
+
+        .lang-btn {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid #ccc;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #333;
+        }
+
+        .lang-btn.active {
+            background: #2e7d32;
+            color: #fff;
+            border-color: #2e7d32;
         }
 
         /* Overlay de Instalação (Bloqueia o restante) */
@@ -21,7 +48,7 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: #2e7d32;
+            background: #ffd966;
             color: #ffffff;
             z-index: 10000;
             display: flex;
@@ -41,6 +68,7 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             max-width: 320px;
             width: 100%;
+            position: relative;
         }
 
         .install-box h3 {
@@ -59,6 +87,7 @@
         /* Oculta o conteúdo principal por padrão */
         .app-content {
             display: none;
+            position: relative;
         }
 
         /* Exibe o conteúdo apenas quando rodar como App Instalado */
@@ -201,10 +230,14 @@
     <!-- Overlay Obrigatório de Instalação -->
     <div id="installOverlay">
         <div class="install-box">
-            <h3>Instalação Necessária</h3>
-            <p>Para utilizar o aplicativo de Dados do Talhão, você precisa instalá-lo no seu dispositivo.</p>
-            <button id="btnInstalarModal" class="btn btn-install">Instalar Aplicativo</button>
-            <p id="iosInstructions" style="display: none; font-size: 12px; margin-top: 15px; color: #777;">
+            <div class="lang-switch">
+                <button class="lang-btn" onclick="alterarIdioma('pt')">PT</button>
+                <button class="lang-btn" onclick="alterarIdioma('en')">EN</button>
+            </div>
+            <h3 data-i18n="installTitle">Instalação Necessária</h3>
+            <p data-i18n="installText">Para utilizar o aplicativo de Dados do Talhão, você precisa instalá-lo no seu dispositivo.</p>
+            <button id="btnInstalarModal" class="btn btn-install" data-i18n="btnInstall">Instalar Aplicativo</button>
+            <p id="iosInstructions" style="display: none; font-size: 12px; margin-top: 15px; color: #777;" data-i18n="iosInstructions">
                 No iOS/Safari: toque no botão de <strong>Compartilhar</strong> e selecione <strong>Adicionar à Tela de Início</strong>.
             </p>
         </div>
@@ -215,22 +248,99 @@
 
     <!-- Conteúdo Principal (Protegido) -->
     <div class="card app-content">
-        <h2>Dados do Talhão</h2>
-        <div class="item"><span class="label">Talhão</span><span class="value" id="t">-</span></div>
-        <div class="item"><span class="label">Área do Talhão</span><span class="value" id="a">-</span></div>
-        <div class="item"><span class="label">Espécie</span><span class="value" id="e">-</span></div>
-        <div class="item"><span class="label">Data de Plantio</span><span class="value" id="p">-</span></div>
+        <div class="lang-switch">
+            <button class="lang-btn" onclick="alterarIdioma('pt')">PT</button>
+            <button class="lang-btn" onclick="alterarIdioma('en')">EN</button>
+        </div>
+        <h2 data-i18n="appTitle">Dados do Talhão</h2>
+        <div class="item"><span class="label" data-i18n="lblTalhao">Talhão</span><span class="value" id="t">-</span></div>
+        <div class="item"><span class="label" data-i18n="lblArea">Área do Talhão</span><span class="value" id="a">-</span></div>
+        <div class="item"><span class="label" data-i18n="lblEspecie">Espécie</span><span class="value" id="e">-</span></div>
+        <div class="item"><span class="label" data-i18n="lblPlantio">Data de Plantio</span><span class="value" id="p">-</span></div>
         
-        <a id="m" href="#" target="_blank" class="btn">Visualizar Mapa (PDF)</a>
+        <a id="m" href="#" target="_blank" class="btn" data-i18n="btnMap">Visualizar Mapa (PDF)</a>
 
         <div id="reader-container">
-            <span class="label" style="margin-bottom: 8px;">Scanner QR Code</span>
-            <button id="btnToggleCamera" class="btn btn-scanner">Abrir Câmera Traseira</button>
+            <span class="label" style="margin-bottom: 8px;" data-i18n="lblScanner">Scanner QR Code</span>
+            <button id="btnToggleCamera" class="btn btn-scanner" data-i18n="btnCamOpen">Abrir Câmera Traseira</button>
             <div id="reader"></div>
         </div>
     </div>
 
     <script>
+        // Dicionário Internacionalização Offline
+        const i18n = {
+            pt: {
+                installTitle: "Instalação Necessária",
+                installText: "Para utilizar o aplicativo de Dados do Talhão, você precisa instalá-lo no seu dispositivo.",
+                btnInstall: "Instalar Aplicativo",
+                iosInstructions: "No iOS/Safari: toque no botão de <strong>Compartilhar</strong> e selecione <strong>Adicionar à Tela de Início</strong>.",
+                appTitle: "Dados do Talhão",
+                lblTalhao: "Talhão",
+                lblArea: "Área do Talhão",
+                lblEspecie: "Espécie",
+                lblPlantio: "Data de Plantio",
+                btnMap: "Visualizar Mapa (PDF)",
+                lblScanner: "Scanner QR Code",
+                btnCamOpen: "Abrir Câmera Traseira",
+                btnCamClose: "Fechar Câmera",
+                toastSuccess: "Dados do talhão carregados com sucesso!",
+                toastInvalidQr: "Formato de QR Code inválido!",
+                toastCamError: "Não foi possível acessar a câmera traseira.",
+                unitHa: "ha"
+            },
+            en: {
+                installTitle: "Installation Required",
+                installText: "To use the Field Plot Data app, you need to install it on your device.",
+                btnInstall: "Install Application",
+                iosInstructions: "On iOS/Safari: tap the <strong>Share</strong> button and select <strong>Add to Home Screen</strong>.",
+                appTitle: "Plot Data",
+                lblTalhao: "Plot",
+                lblArea: "Plot Area",
+                lblEspecie: "Species",
+                lblPlantio: "Planting Date",
+                btnMap: "View Map (PDF)",
+                lblScanner: "QR Code Scanner",
+                btnCamOpen: "Open Rear Camera",
+                btnCamClose: "Close Camera",
+                toastSuccess: "Plot data loaded successfully!",
+                toastInvalidQr: "Invalid QR Code format!",
+                toastCamError: "Unable to access the rear camera.",
+                unitHa: "ha"
+            }
+        };
+
+        // Idioma Padrão ou Salvo
+        let currentLang = localStorage.getItem('app_lang') || (navigator.language.startsWith('en') ? 'en' : 'pt');
+
+        function alterarIdioma(lang) {
+            currentLang = lang;
+            localStorage.setItem('app_lang', lang);
+            document.documentElement.lang = lang === 'pt' ? 'pt-BR' : 'en';
+
+            // Atualiza textos na interface
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (i18n[lang][key]) {
+                    el.innerHTML = i18n[lang][key];
+                }
+            });
+
+            // Atualiza destaques dos botões de idioma
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent.toLowerCase() === lang);
+            });
+
+            // Atualiza texto do botão da câmera se estiver ativa/inativa
+            const btnCam = document.getElementById('btnToggleCamera');
+            if (btnCam) {
+                btnCam.textContent = isScanning ? i18n[lang].btnCamClose : i18n[lang].btnCamOpen;
+            }
+
+            // Recarrega valores interpolados caso existam na URL
+            carregarDados(false);
+        }
+
         // Verificação se está rodando no modo aplicativo (standalone)
         function verificarStatusApp() {
             const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
@@ -239,7 +349,7 @@
 
             if (isStandalone) {
                 document.body.classList.add('is-standalone');
-                carregarDados();
+                carregarDados(true);
             } else {
                 document.body.classList.remove('is-standalone');
                 
@@ -267,14 +377,14 @@
         }
 
         // 1. Leitura dos dados do fragmento (#)
-        function carregarDados() {
+        function carregarDados(exibirToastNotif = true) {
             const hash = window.location.hash.substring(1);
             if (!hash) return;
         
             const [talhao, area, especie, plantio, mapa] = decodeURIComponent(hash).split('|');
         
             document.getElementById('t').textContent = talhao || '-';
-            document.getElementById('a').textContent = area ? `${area} ha` : '-';
+            document.getElementById('a').textContent = area ? `${area} ${i18n[currentLang].unitHa}` : '-';
             document.getElementById('e').textContent = especie || '-';
             document.getElementById('p').textContent = plantio || '-';
         
@@ -287,7 +397,9 @@
                 btnMapa.classList.add('disabled');
             }
         
-            exibirToast('Dados do talhão carregados com sucesso!', 'success');
+            if (exibirToastNotif) {
+                exibirToast(i18n[currentLang].toastSuccess, 'success');
+            }
         }
 
         // 2. Registro do Service Worker (PWA)
@@ -333,7 +445,7 @@
                     carregarDados();
                     pararCamera();
                 } else {
-                    exibirToast('Formato de QR Code inválido!', 'error');
+                    exibirToast(i18n[currentLang].toastInvalidQr, 'error');
                 }
             };
 
@@ -346,7 +458,7 @@
                     qrCodeSuccessCallback
                 );
                 isScanning = true;
-                document.getElementById('btnToggleCamera').textContent = "Fechar Câmera";
+                document.getElementById('btnToggleCamera').textContent = i18n[currentLang].btnCamClose;
             } catch (err) {
                 try {
                     await html5QrCode.start(
@@ -355,10 +467,10 @@
                         qrCodeSuccessCallback
                     );
                     isScanning = true;
-                    document.getElementById('btnToggleCamera').textContent = "Fechar Câmera";
+                    document.getElementById('btnToggleCamera').textContent = i18n[currentLang].btnCamClose;
                 } catch (fallbackErr) {
                     console.error("Erro na câmera:", fallbackErr);
-                    exibirToast('Não foi possível acessar a câmera traseira.', 'error');
+                    exibirToast(i18n[currentLang].toastCamError, 'error');
                 }
             }
         }
@@ -371,7 +483,7 @@
                     console.log("Erro ao desligar a câmera:", e);
                 }
                 isScanning = false;
-                document.getElementById('btnToggleCamera').textContent = "Abrir Câmera Traseira";
+                document.getElementById('btnToggleCamera').textContent = i18n[currentLang].btnCamOpen;
             }
         }
 
@@ -383,8 +495,11 @@
             }
         });
 
-        window.addEventListener('DOMContentLoaded', verificarStatusApp);
-        window.addEventListener('hashchange', carregarDados);
+        window.addEventListener('DOMContentLoaded', () => {
+            alterarIdioma(currentLang);
+            verificarStatusApp();
+        });
+        window.addEventListener('hashchange', () => carregarDados(true));
 
         window.addEventListener('visibilitychange', () => {
             if (document.hidden && isScanning) {
