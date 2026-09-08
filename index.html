@@ -277,7 +277,17 @@
                 document.getElementById('btnToggleCamera').textContent = "Abrir Câmera Traseira";
             }
         }
-
+        function exibirErro(mensagem) {
+            const errorBox = document.getElementById('alertError');
+            if (errorBox) {
+                errorBox.textContent = `❌ ${mensagem}`;
+                errorBox.style.display = 'block';
+        
+                setTimeout(() => {
+                    errorBox.style.display = 'none';
+                }, 4000);
+            }
+        }
         document.getElementById('btnToggleCamera').addEventListener('click', () => {
             if (isScanning) {
                 pararCamera();
@@ -293,17 +303,7 @@
             }
         });
         window.addEventListener('pagehide', pararCamera);
-        function exibirErro(mensagem) {
-            const errorBox = document.getElementById('alertError');
-            if (errorBox) {
-                errorBox.textContent = `❌ ${mensagem}`;
-                errorBox.style.display = 'block';
         
-                setTimeout(() => {
-                    errorBox.style.display = 'none';
-                }, 4000);
-            }
-        }
     </script>
 </body>
 
