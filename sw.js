@@ -1,4 +1,4 @@
-const CACHE_NAME = 'v1.9.0';
+const CACHE_NAME = 'v1.9.1';
 const DEVELOPER = 'Guilherme Neves';
 
 const ASSETS = [
@@ -6,16 +6,22 @@ const ASSETS = [
   './index.html',
   './manifest.json',
   './Tucano-mini.png',
-  'https://unpkg.com/html5-qrcode'
+  'https://unpkg.com/html5-qrcode@2.3.8'
 ];
 
-// 1. Instalação: Salva os arquivos no cache e força a ativação imediata
+// 1. Instalação: Salva os arquivos no cache e força a ativação imediata.
+//    cache.add individual com catch: a falha de UM recurso (ex.: CDN externo)
+//    não impede mais a instalação do Service Worker.
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS);
-    }).then(() => self.skipWaiting()) // Força o novo SW a assumir imediatamente
-  );
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    await Promise.all(
+      ASSETS.map((url) =>
+        cache.add(url).catch((err) => console.warn('Falha ao cachear:', url, err))
+      )
+    );
+    await self.skipWaiting(); // Força o novo SW a assumir imediatamente
+  })());
 });
 
 // 2. Ativação: Limpa caches antigos automaticamente
