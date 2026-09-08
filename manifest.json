@@ -1,6 +1,6 @@
 {
-  "name": "Dados do Talhão",
-  "short_name": "Talhões",
+  "name": "Informações de campo - Tucano Florestal",
+  "short_name": "Info Campo - Tucano Florestal",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f4f6f8",
