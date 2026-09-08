@@ -211,7 +211,9 @@
             min-height: 200px;
         }
 
-        #reader select, #reader button, #reader span {
+        #reader select,
+        #reader button,
+        #reader span {
             display: none !important;
         }
 
@@ -276,19 +278,25 @@
     </div>
 
     <div class="global-footer">
-        <div><span data-i18n="lblDevBy">Desenvolvido por</span> <span class="app-dev-val">-</span> | <span class="app-version-val">-</span></div>
+        <div><span data-i18n="lblDevBy">Desenvolvido por</span> <span class="app-dev-val">-</span> | <span
+                class="app-version-val">-</span></div>
     </div>
 
     <div id="installOverlay">
         <div class="install-box">
             <!-- Adicionado o logotipo no topo do card de instalação -->
-            <img src="./Tucano-mini.png" alt="Logo Tucano Florestal" style="width: 70px; height: auto; margin: 0 auto 15px auto; display: block;">
+            <img src="./Tucano-mini.png" alt="Logo Tucano Florestal"
+                style="width: 70px; height: auto; margin: 0 auto 15px auto; display: block;">
             <h3 data-i18n="installTitle">Instalação Necessária</h3>
-            <p data-i18n="installText">Para utilizar o aplicativo de Informações de campo, você precisa instalá-lo no seu dispositivo.</p>
+            <p data-i18n="installText">Para utilizar o aplicativo de Informações de campo, você precisa instalá-lo no
+                seu dispositivo.</p>
             <button id="btnInstalarModal" class="btn btn-install" data-i18n="btnInstall">Instalar Aplicativo</button>
-            <p class="install-note" data-i18n="installSafeNote">Instalação rápida, leve e sem acesso a dados pessoais.</p>
-            <p id="iosInstructions" style="display: none; font-size: 11px; margin-top: 14px; color: #888;" data-i18n="iosInstructions">
-                No iOS/Safari: toque em <strong>Compartilhar</strong> e selecione <strong>Adicionar à Tela de Início</strong>.
+            <p class="install-note" data-i18n="installSafeNote">Instalação rápida, leve e sem acesso a dados pessoais.
+            </p>
+            <p id="iosInstructions" style="display: none; font-size: 11px; margin-top: 14px; color: #888;"
+                data-i18n="iosInstructions">
+                No iOS/Safari: toque em <strong>Compartilhar</strong> e selecione <strong>Adicionar à Tela de
+                    Início</strong>.
             </p>
         </div>
     </div>
@@ -298,23 +306,28 @@
     <div class="card app-content">
         <!-- Adicionado o logotipo acima do título -->
         <div style="text-align: center; margin-bottom: 10px;">
-            <img src="./Tucano-mini.png" alt="Logo Tucano Florestal" style="width: 65px; height: auto; display: inline-block;">
+            <img src="./Tucano-mini.png" alt="Logo Tucano Florestal"
+                style="width: 65px; height: auto; display: inline-block;">
         </div>
-    
+
         <h2 data-i18n="appTitle">Informações de campo - Tucano Florestal</h2>
-        <div class="item"><span class="label" data-i18n="lblTalhao">Talhão</span><span class="value" id="t">-</span></div>
-        <div class="item"><span class="label" data-i18n="lblArea">Área do Talhão</span><span class="value" id="a">-</span></div>
-        <div class="item"><span class="label" data-i18n="lblEspecie">Espécie</span><span class="value" id="e">-</span></div>
-        <div class="item"><span class="label" data-i18n="lblPlantio">Data de Plantio</span><span class="value" id="p">-</span></div>
-        
+        <div class="item"><span class="label" data-i18n="lblTalhao">Talhão</span><span class="value" id="t">-</span>
+        </div>
+        <div class="item"><span class="label" data-i18n="lblArea">Área do Talhão</span><span class="value"
+                id="a">-</span></div>
+        <div class="item"><span class="label" data-i18n="lblEspecie">Espécie</span><span class="value" id="e">-</span>
+        </div>
+        <div class="item"><span class="label" data-i18n="lblPlantio">Data de Plantio</span><span class="value"
+                id="p">-</span></div>
+
         <a id="m" href="#" target="_blank" class="btn" data-i18n="btnMap">Visualizar Mapa (PDF)</a>
-    
+
         <div id="reader-container">
             <span class="label" style="margin-bottom: 8px;" data-i18n="lblScanner">Scanner QR Code</span>
             <button id="btnToggleCamera" class="btn btn-scanner" data-i18n="btnCamOpen">Abrir Câmera Traseira</button>
             <div id="reader"></div>
         </div>
-    
+
         <div class="card-footer">
             <span data-i18n="lblDevBy">Desenvolvido por</span> <strong>Guilherme Neves</strong><br>
             <span data-i18n="lblVersion">Versão</span>: <span class="app-version-val">v1.8.5</span>
@@ -375,21 +388,31 @@
 
         let currentLang = localStorage.getItem('app_lang') || (navigator.language.startsWith('en') ? 'en' : 'pt');
 
-        async function carregarVersaoDoSW() {
+        async function carregarInfoDoSW() {
             try {
                 const response = await fetch('./sw.js');
                 if (!response.ok) return;
                 const text = await response.text();
-                
-                const match = text.match(/(?:CACHE_NAME|VERSION|CACHE_VERSION)\s*=\s*['"`]([^'"`]+)['"`]/i);
-                if (match && match[1]) {
-                    const versao = match[1];
+
+                // Extrai CACHE_NAME, VERSION ou CACHE_VERSION
+                const matchVersao = text.match(/(?:CACHE_NAME|VERSION|CACHE_VERSION)\s*=\s*['"`]([^'"`]+)['"`]/i);
+                if (matchVersao && matchVersao[1]) {
+                    const versao = matchVersao[1];
                     document.querySelectorAll('.app-version-val').forEach(el => {
                         el.textContent = versao.startsWith('v') ? versao : `v${versao}`;
                     });
                 }
+
+                // Extrai DEVELOPER ou AUTHOR
+                const matchDev = text.match(/(?:DEVELOPER|AUTHOR|DEV_NAME)\s*=\s*['"`]([^'"`]+)['"`]/i);
+                if (matchDev && matchDev[1]) {
+                    const dev = matchDev[1];
+                    document.querySelectorAll('.app-dev-val').forEach(el => {
+                        el.textContent = dev;
+                    });
+                }
             } catch (e) {
-                console.log("Não foi possível carregar a versão do sw.js:", e);
+                console.log("Não foi possível carregar as informações do sw.js:", e);
             }
         }
 
@@ -410,11 +433,11 @@
                     }
                 ]
             };
-        
+
             const stringData = JSON.stringify(manifestData);
             const blob = new Blob([stringData], { type: 'application/json' });
             const manifestUrl = URL.createObjectURL(blob);
-        
+
             const manifestLink = document.getElementById('manifestLink');
             if (manifestLink) {
                 manifestLink.setAttribute('href', manifestUrl);
@@ -449,16 +472,16 @@
         }
 
         function verificarStatusApp() {
-            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
-                                 window.navigator.standalone || 
-                                 document.referrer.includes('android-app://');
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                window.navigator.standalone ||
+                document.referrer.includes('android-app://');
 
             if (isStandalone) {
                 document.body.classList.add('is-standalone');
                 carregarDados(true);
             } else {
                 document.body.classList.remove('is-standalone');
-                
+
                 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
                 if (isIOS) {
                     document.getElementById('iosInstructions').style.display = 'block';
@@ -484,14 +507,14 @@
         function carregarDados(exibirToastNotif = true) {
             const hash = window.location.hash.substring(1);
             if (!hash) return;
-        
+
             const [talhao, area, especie, plantio, mapa] = decodeURIComponent(hash).split('|');
-        
+
             document.getElementById('t').textContent = talhao || '-';
             document.getElementById('a').textContent = area ? `${area} ${i18n[currentLang].unitHa}` : '-';
             document.getElementById('e').textContent = especie || '-';
             document.getElementById('p').textContent = plantio || '-';
-        
+
             const btnMapa = document.getElementById('m');
             if (mapa && mapa !== '#') {
                 btnMapa.href = mapa;
@@ -500,7 +523,7 @@
                 btnMapa.href = '#';
                 btnMapa.classList.add('disabled');
             }
-        
+
             if (exibirToastNotif) {
                 exibirToast(i18n[currentLang].toastSuccess, 'success');
             }
@@ -511,7 +534,7 @@
                 .then(() => console.log('Service Worker ativo.'))
                 .catch((err) => console.log('Erro PWA:', err));
         }
-        
+
         let deferredPrompt;
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
@@ -521,7 +544,7 @@
             if (btnInstalarModal) {
                 btnInstalarModal.addEventListener('click', () => {
                     deferredPrompt.prompt();
-                    deferredPrompt.userChoice.then(() => { 
+                    deferredPrompt.userChoice.then(() => {
                         deferredPrompt = null;
                     });
                 });
