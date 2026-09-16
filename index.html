@@ -1,671 +1,287 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/png" href="./Tucano-mini.png">
-    <link id="manifestLink" rel="manifest" href="manifest.json">
-    <title>Informações de campo - Tucano Florestal</title>
+    <meta name="theme-color" content="#2e7d32">
+    <title>Leitor de Talhões - AMS</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="Tucano-mini.png">
+    
+    <!-- Biblioteca HTML5 QR Code Scanner -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
     <style>
+        :root {
+            --primary: #2e7d32;
+            --primary-dark: #1b5e20;
+            --bg: #f4f6f8;
+            --card-bg: #ffffff;
+            --text: #333333;
+        }
+
         body {
-            font-family: system-ui, -apple-system, sans-serif;
-            background: #f4f6f8;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
             margin: 0;
-            padding: 20px;
-            padding-bottom: 50px;
-        }
-
-        .lang-switch {
-            position: fixed;
-            top: 15px;
-            right: 15px;
-            display: flex;
-            gap: 5px;
-            z-index: 20000;
-        }
-
-        .lang-btn {
-            background: #ffffff;
-            border: 1px solid #2e7d32;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: bold;
-            cursor: pointer;
-            color: #2e7d32;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-            transition: all 0.2s ease;
-        }
-
-        .lang-btn.active {
-            background: #2e7d32;
-            color: #ffffff;
-        }
-
-        .global-footer {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 20000;
-            font-size: 11px;
-            color: #ffffff;
-            background: rgba(0, 0, 0, 0.65);
-            padding: 6px 16px;
-            border-radius: 20px;
-            backdrop-filter: blur(4px);
-            pointer-events: none;
-            white-space: nowrap;
-            text-align: center;
-            box-sizing: border-box;
-            width: max-content;
-            max-width: 90vw;
-        }
-
-        body.is-standalone .global-footer {
-            display: none !important;
-        }
-
-        #installOverlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: #233621;
-            color: #ffffff;
-            z-index: 10000;
+            padding: 0;
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
-            text-align: center;
-            padding: 30px;
-            box-sizing: border-box;
+            min-height: 100vh;
         }
 
-        .install-box {
-            background: #ffffff;
-            color: #333333;
-            padding: 25px 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            max-width: 320px;
+        header {
+            background-color: var(--primary);
+            color: white;
             width: 100%;
+            padding: 1rem 0;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
 
-        .install-box h3 {
-            margin-top: 0;
-            color: #2e7d32;
-            font-size: 20px;
+        header img {
+            height: 36px;
         }
 
-        .install-box p {
-            font-size: 14px;
-            color: #555;
-            line-height: 1.4;
-            margin-bottom: 20px;
+        header h1 {
+            margin: 0;
+            font-size: 1.25rem;
         }
 
-        .install-note {
-            font-size: 11px;
-            color: #888888;
-            margin-top: 14px;
-            margin-bottom: 0;
-            line-height: 1.3;
-            font-weight: 400;
-        }
-
-        .app-content {
-            display: none;
-            margin-top: 40px;
-        }
-
-        body.is-standalone .app-content {
-            display: block;
-        }
-
-        body.is-standalone #installOverlay {
-            display: none !important;
+        main {
+            width: 90%;
+            max-width: 500px;
+            margin: 20px auto;
+            flex: 1;
         }
 
         .card {
-            background: #fff;
-            border-radius: 10px;
+            background: var(--card-bg);
+            border-radius: 12px;
             padding: 20px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            border-top: 5px solid #2e7d32;
-            max-width: 360px;
-            margin: auto;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
         }
 
-        h2 {
-            margin: 0 0 15px 0;
-            color: #2e7d32;
-            font-size: 20px;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 8px;
-            text-align: center;
+        .talhao-header {
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
         }
 
-        .item {
+        .talhao-id {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 0;
+        }
+
+        .info-group {
             margin-bottom: 12px;
-            font-size: 15px;
         }
 
-        .label {
-            font-weight: 600;
+        .info-label {
+            font-size: 0.85rem;
             color: #666;
-            display: block;
-            font-size: 12px;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .value {
-            color: #111;
-            font-size: 16px;
+        .info-value {
+            font-size: 1.1rem;
             font-weight: 500;
         }
 
         .btn {
             display: block;
-            margin-top: 15px;
+            width: 100%;
             padding: 12px;
-            background: #2e7d32;
-            color: #fff;
+            background-color: var(--primary);
+            color: white;
             text-align: center;
             text-decoration: none;
-            border-radius: 6px;
+            border-radius: 8px;
             font-weight: bold;
-            border: none;
-            width: 100%;
             box-sizing: border-box;
+            border: none;
             cursor: pointer;
+            font-size: 1rem;
+            margin-top: 10px;
         }
 
-        .btn.disabled {
-            background: #ccc;
-            pointer-events: none;
-        }
-
-        .btn-install {
-            background: #1565c0;
-            font-size: 15px;
-        }
-
-        #reader-container {
-            margin-top: 20px;
-            border-top: 1px dashed #ccc;
-            padding-top: 15px;
+        .btn:hover {
+            background-color: var(--primary-dark);
         }
 
         #reader {
             width: 100%;
-            border-radius: 8px;
+            border-radius: 12px;
             overflow: hidden;
-            background: #222;
-            min-height: 200px;
+            background: #000;
         }
 
-        #reader select,
-        #reader button,
-        #reader span {
+        .hidden {
             display: none !important;
         }
 
-        .btn-scanner {
-            background: #37474f;
-            margin-bottom: 10px;
-        }
-
-        .card-footer {
-            margin-top: 20px;
-            padding-top: 12px;
-            border-top: 1px solid #eee;
-            text-align: center;
-            font-size: 12px;
-            color: #777;
-        }
-
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%) translateY(20px);
-            z-index: 9999;
-            width: 85%;
-            max-width: 320px;
-            padding: 12px 16px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            text-align: center;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease-in-out;
-            pointer-events: none;
-        }
-
-        .toast.show {
-            opacity: 1;
-            visibility: visible;
-            transform: translateX(-50%) translateY(0);
-        }
-
-        .toast-success {
-            background-color: #2e7d32;
-            color: #ffffff;
-        }
-
-        .toast-error {
-            background-color: #c62828;
-            color: #ffffff;
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            background: #e8f5e9;
+            color: #2e7d32;
         }
     </style>
-    <script src="https://unpkg.com/html5-qrcode@2.3.8"></script>
-<base target="_blank">
 </head>
-
 <body>
 
-    <div class="lang-switch">
-        <button class="lang-btn" onclick="alterarIdioma('pt')">PT</button>
-        <button class="lang-btn" onclick="alterarIdioma('en')">EN</button>
-    </div>
+    <header>
+        <img src="Tucano-min-transparent.png" alt="Logo AMS">
+        <h1>Talhões AMS</h1>
+    </header>
 
-    <div class="global-footer">
-        <div><span data-i18n="lblDevBy">Desenvolvido por</span> <span class="app-dev-val">-</span> | <span
-                class="app-version-val">-</span></div>
-    </div>
+    <main>
+        <!-- Card de exibição dos dados do Talhão lido -->
+        <div id="card-dados" class="card hidden">
+            <div class="talhao-header">
+                <span class="status-badge">Talhão Identificado</span>
+                <h2 id="val-id" class="talhao-id">#---</h2>
+            </div>
+            
+            <div class="info-group">
+                <div class="info-label">Área</div>
+                <div id="val-area" class="info-value">-- ha</div>
+            </div>
 
-    <div id="installOverlay">
-        <div class="install-box">
-            <!-- Adicionado o logotipo no topo do card de instalação -->
-            <img src="./Tucano-mini.png" alt="Logo Tucano Florestal"
-                style="width: 70px; height: auto; margin: 0 auto 15px auto; display: block;">
-            <h3 data-i18n="installTitle">Instalação Necessária</h3>
-            <p data-i18n="installText">Para utilizar o aplicativo de Informações de campo, você precisa instalá-lo no
-                seu dispositivo.</p>
-            <button id="btnInstalarModal" class="btn btn-install" data-i18n="btnInstall">Instalar Aplicativo</button>
-            <p class="install-note" data-i18n="installSafeNote">Instalação rápida, leve e sem acesso a dados pessoais.
-            </p>
-            <p id="iosInstructions" style="display: none; font-size: 11px; margin-top: 14px; color: #888;"
-                data-i18n="iosInstructions">
-                No iOS/Safari: toque em <strong>Compartilhar</strong> e selecione <strong>Adicionar à Tela de
-                    Início</strong>.
-            </p>
-        </div>
-    </div>
+            <div class="info-group">
+                <div class="info-label">Espécie</div>
+                <div id="val-especie" class="info-value">--</div>
+            </div>
 
-    <div id="toast" class="toast"></div>
+            <div class="info-group">
+                <div class="info-label">Previsão de Corte</div>
+                <div id="val-corte" class="info-value">--</div>
+            </div>
 
-    <div class="card app-content">
-        <!-- Adicionado o logotipo acima do título -->
-        <div style="text-align: center; margin-bottom: 10px;">
-            <img src="./Tucano-mini.png" alt="Logo Tucano Florestal"
-                style="width: 65px; height: auto; display: inline-block;">
+            <a id="btn-mapa" href="#" target="_blank" class="btn hidden">Visualizar Mapa (PDF)</a>
+            <button onclick="reiniciarLeitor()" class="btn" style="background:#666; margin-top:10px;">Escanear Outro QR Code</button>
         </div>
 
-        <h2 data-i18n="appTitle">Informações de campo - Tucano Florestal</h2>
-        <div class="item"><span class="label" data-i18n="lblTalhao">Talhão</span><span class="value" id="t">-</span>
-        </div>
-        <div class="item"><span class="label" data-i18n="lblArea">Área do Talhão</span><span class="value"
-                id="a">-</span></div>
-        <div class="item"><span class="label" data-i18n="lblEspecie">Espécie</span><span class="value" id="e">-</span>
-        </div>
-        <div class="item"><span class="label" data-i18n="lblPlantio">Data de Plantio</span><span class="value"
-                id="p">-</span></div>
-
-        <a id="m" href="#" target="_blank" class="btn" data-i18n="btnMap">Visualizar Mapa (PDF)</a>
-
-        <div id="reader-container">
-            <span class="label" style="margin-bottom: 8px;" data-i18n="lblScanner">Scanner QR Code</span>
-            <button id="btnToggleCamera" class="btn btn-scanner" data-i18n="btnCamOpen">Abrir Câmera Traseira</button>
+        <!-- Leitor de Câmera (Scanner) -->
+        <div id="secao-scanner" class="card">
+            <h3 style="margin-top:0;">Escanear QR Code</h3>
             <div id="reader"></div>
         </div>
-
-        <div class="card-footer">
-            <span data-i18n="lblDevBy">Desenvolvido por</span> <strong class="app-dev-val">-</strong><br>
-            <span data-i18n="lblVersion">Versão</span>: <span class="app-version-val">-</span>
-        </div>
-    </div>
+    </main>
 
     <script>
-        const i18n = {
-            pt: {
-                appName: "Informações de campo - Tucano Florestal",
-                appShortName: "Info Campo - Tucano Florestal",
-                installTitle: "Instalação Necessária",
-                installText: "Para utilizar o aplicativo de Informações de campo, você precisa instalá-lo no seu dispositivo.",
-                btnInstall: "Instalar Aplicativo",
-                installSafeNote: "Instalação rápida, leve e sem acesso a dados pessoais.",
-                iosInstructions: "No iOS/Safari: toque em <strong>Compartilhar</strong> e selecione <strong>Adicionar à Tela de Início</strong>.",
-                appTitle: "Informações de campo - Tucano Florestal",
-                lblTalhao: "Talhão",
-                lblArea: "Área do Talhão",
-                lblEspecie: "Espécie",
-                lblPlantio: "Data de Plantio",
-                btnMap: "Visualizar Mapa (PDF)",
-                lblScanner: "Scanner QR Code",
-                btnCamOpen: "Abrir Câmera Traseira",
-                btnCamClose: "Fechar Câmera",
-                toastSuccess: "Informações de campo carregadas com sucesso!",
-                toastInvalidQr: "Formato de QR Code inválido!",
-                toastCamError: "Não foi possível acessar a câmera traseira.",
-                unitHa: "ha",
-                lblDevBy: "Desenvolvido por",
-                lblVersion: "Versão"
-            },
-            en: {
-                appName: "Field Data - Tucano Florestal",
-                appShortName: "Field Data - Tucano Florestal",
-                installTitle: "Installation Required",
-                installText: "To use the Field Data app, you need to install it on your device.",
-                btnInstall: "Install Application",
-                installSafeNote: "Fast, lightweight installation with no access to personal data.",
-                iosInstructions: "On iOS/Safari: tap <strong>Share</strong> and select <strong>Add to Home Screen</strong>.",
-                appTitle: "Field Data - Tucano Florestal",
-                lblTalhao: "Field",
-                lblArea: "Field Area",
-                lblEspecie: "Species",
-                lblPlantio: "Planting Date",
-                btnMap: "View Map (PDF)",
-                lblScanner: "QR Code Scanner",
-                btnCamOpen: "Open Rear Camera",
-                btnCamClose: "Close Camera",
-                toastSuccess: "Field data loaded successfully!",
-                toastInvalidQr: "Invalid QR Code format!",
-                toastCamError: "Unable to access the rear camera.",
-                unitHa: "ha",
-                lblDevBy: "Developed by",
-                lblVersion: "Version"
-            }
-        };
-
-        let currentLang = localStorage.getItem('app_lang') || (navigator.language.startsWith('en') ? 'en' : 'pt');
-
-        async function carregarInfoDoSW() {
-            try {
-                const response = await fetch('./sw.js');
-                if (!response.ok) return;
-                const text = await response.text();
-
-                // Extrai CACHE_VERSION
-                const matchVersao = text.match(/(?:CACHE_NAME)\s*=\s*['"`]([^'"`]+)['"`]/i);
-                if (matchVersao && matchVersao[1]) {
-                    const versao = matchVersao[1];
-                    document.querySelectorAll('.app-version-val').forEach(el => {
-                        el.textContent = versao.startsWith('v') ? versao : `v${versao}`;
-                    });
-                }
-
-                // Extrai DEVELOPER
-                const matchDev = text.match(/(?:DEVELOPER)\s*=\s*['"`]([^'"`]+)['"`]/i);
-                if (matchDev && matchDev[1]) {
-                    const dev = matchDev[1];
-                    document.querySelectorAll('.app-dev-val').forEach(el => {
-                        el.textContent = dev;
-                    });
-                }
-            } catch (e) {
-                console.log("Não foi possível carregar as informações do sw.js:", e);
-            }
-        }
-
-        async function atualizarManifest(lang) {
-            // Fonte única de verdade: lê o manifest.json versionado e
-            // sobrescreve apenas os textos que dependem do idioma.
-            let manifestData;
-            try {
-                const response = await fetch('./manifest.json');
-                if (!response.ok) throw new Error('manifest.json não encontrado');
-                manifestData = await response.json();
-            } catch (e) {
-                // Fallback caso o fetch falhe (ex.: aberto via file://)
-                manifestData = {
-                    "start_url": "./index.html",
-                    "display": "standalone",
-                    "background_color": "#f4f6f8",
-                    "theme_color": "#2e7d32",
-                    "icons": [
-                        {
-                            "src": "./Tucano-mini.png",
-                            "sizes": "512x512",
-                            "type": "image/png",
-                            "purpose": "any maskable"
-                        }
-                    ]
-                };
-            }
-
-            manifestData.name = i18n[lang].appName;
-            manifestData.short_name = i18n[lang].appShortName;
-
-            const stringData = JSON.stringify(manifestData);
-            const blob = new Blob([stringData], { type: 'application/json' });
-            const manifestUrl = URL.createObjectURL(blob);
-
-            const manifestLink = document.getElementById('manifestLink');
-            if (manifestLink) {
-                // Libera o Blob anterior para não vazar memória
-                const oldHref = manifestLink.getAttribute('href');
-                if (oldHref && oldHref.startsWith('blob:')) {
-                    URL.revokeObjectURL(oldHref);
-                }
-                manifestLink.setAttribute('href', manifestUrl);
-            }
-        }
-
-        function alterarIdioma(lang) {
-            currentLang = lang;
-            localStorage.setItem('app_lang', lang);
-            document.documentElement.lang = lang === 'pt' ? 'pt-BR' : 'en';
-
-            document.title = i18n[lang].appName;
-            atualizarManifest(lang);
-
-            document.querySelectorAll('[data-i18n]').forEach(el => {
-                const key = el.getAttribute('data-i18n');
-                if (i18n[lang][key]) {
-                    el.innerHTML = i18n[lang][key];
-                }
-            });
-
-            document.querySelectorAll('.lang-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.textContent.trim().toLowerCase() === lang);
-            });
-
-            const btnCam = document.getElementById('btnToggleCamera');
-            if (btnCam) {
-                btnCam.textContent = isScanning ? i18n[lang].btnCamClose : i18n[lang].btnCamOpen;
-            }
-
-            carregarDados(false);
-        }
-
-        function verificarStatusApp() {
-            const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
-                window.navigator.standalone ||
-                document.referrer.includes('android-app://');
-
-            if (isStandalone) {
-                document.body.classList.add('is-standalone');
-                carregarDados(true);
-            } else {
-                document.body.classList.remove('is-standalone');
-
-                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-                if (isIOS) {
-                    document.getElementById('iosInstructions').style.display = 'block';
-                    document.getElementById('btnInstalarModal').style.display = 'none';
-                }
-            }
-        }
-
-        let toastTimeout = null;
-        function exibirToast(mensagem, tipo = 'success') {
-            const toast = document.getElementById('toast');
-            if (!toast) return;
-
-            clearTimeout(toastTimeout);
-            toast.textContent = mensagem;
-            toast.className = `toast toast-${tipo} show`;
-
-            toastTimeout = setTimeout(() => {
-                toast.classList.remove('show');
-            }, 2000);
-        }
-
-        function carregarDados(exibirToastNotif = true) {
-            const hash = window.location.hash.substring(1);
-            if (!hash) return;
-
-            let dadosDecodificados;
-            try {
-                dadosDecodificados = decodeURIComponent(hash);
-            } catch (e) {
-                // Hash com sequência malformada (ex.: '%' solto vindo de QR externo)
-                dadosDecodificados = hash;
-            }
-
-            const [talhao, area, especie, plantio, mapa] = dadosDecodificados.split('|');
-
-            document.getElementById('t').textContent = talhao || '-';
-            document.getElementById('a').textContent = area ? `${area} ${i18n[currentLang].unitHa}` : '-';
-            document.getElementById('e').textContent = especie || '-';
-            document.getElementById('p').textContent = plantio || '-';
-
-            const btnMapa = document.getElementById('m');
-            if (mapa && mapa !== '#') {
-                btnMapa.href = mapa;
-                btnMapa.classList.remove('disabled');
-            } else {
-                btnMapa.href = '#';
-                btnMapa.classList.add('disabled');
-            }
-
-            if (exibirToastNotif) {
-                exibirToast(i18n[currentLang].toastSuccess, 'success');
-            }
-        }
-
+        // Registrar Service Worker para suporte Offline
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./sw.js')
-                .then(() => console.log('Service Worker ativo.'))
-                .catch((err) => console.log('Erro PWA:', err));
+            navigator.serviceWorker.register('sw.js')
+                .then(() => console.log('Service Worker registrado com sucesso.'))
+                .catch(err => console.error('Falha ao registrar Service Worker:', err));
         }
 
-        let deferredPrompt = null;
-        let installHandlerVinculado = false;
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
+        const SCHEME_APP_NATIVO = "meuleitor://scan?dados=";
 
-            const btnInstalarModal = document.getElementById('btnInstalarModal');
-            // Vincula o clique uma única vez, para não acumular listeners
-            if (btnInstalarModal && !installHandlerVinculado) {
-                installHandlerVinculado = true;
-                btnInstalarModal.addEventListener('click', async () => {
-                    if (!deferredPrompt) return;
-                    deferredPrompt.prompt();
-                    try {
-                        await deferredPrompt.userChoice;
-                    } catch (err) {
-                        console.log('Escolha de instalação interrompida:', err);
+        // Processa parâmetros da URL
+        window.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const dados = params.get('dados');
+
+            if (dados) {
+                tentarAbrirAppENosDados(dados);
+            } else {
+                iniciarScannerCamera();
+            }
+        });
+
+        function tentarAbrirAppENosDados(dadosBrutos) {
+            const urlEncoded = encodeURIComponent(dadosBrutos);
+            const appUri = SCHEME_APP_NATIVO + urlEncoded;
+
+            let mudouDeTela = false;
+            const onBlur = () => { mudouDeTela = true; };
+            window.addEventListener('blur', onBlur);
+
+            // Tenta invocar o App Nativo instalado
+            window.location.href = appUri;
+
+            // Se em 1.5s a página continuar visível, permanece no Web App e mostra os dados
+            setTimeout(() => {
+                window.removeEventListener('blur', onBlur);
+                if (!mudouDeTela) {
+                    processarEExibirDados(dadosBrutos);
+                }
+            }, 1500);
+        }
+
+        function processarEExibirDados(dadosTexto) {
+            // Formato esperado: #ID|ÁREA|ESPÉCIE|CORTE|URL_MAPA
+            const partes = dadosTexto.split('|');
+
+            if (partes.length >= 4) {
+                document.getElementById('val-id').innerText = partes[0] || '#---';
+                document.getElementById('val-area').innerText = (partes[1] ? partes[1] + ' ha' : '--');
+                document.getElementById('val-especie').innerText = partes[2] || '--';
+                document.getElementById('val-corte').innerText = partes[3] || '--';
+
+                const btnMapa = document.getElementById('btn-mapa');
+                if (partes[4] && partes[4].startsWith('http')) {
+                    btnMapa.href = partes[4];
+                    btnMapa.classList.remove('hidden');
+                } else {
+                    btnMapa.classList.add('hidden');
+                }
+
+                document.getElementById('secao-scanner').classList.add('hidden');
+                document.getElementById('card-dados').classList.remove('hidden');
+            } else {
+                alert('Formato de dados do QR Code inválido.');
+                iniciarScannerCamera();
+            }
+        }
+
+        let html5QrcodeScanner = null;
+
+        function iniciarScannerCamera() {
+            document.getElementById('card-dados').classList.add('hidden');
+            document.getElementById('secao-scanner').classList.remove('hidden');
+
+            if (!html5QrcodeScanner) {
+                html5QrcodeScanner = new Html5QrcodeScanner(
+                    "reader",
+                    { fps: 10, qrbox: { width: 250, height: 250 } },
+                    /* verbose= */ false
+                );
+
+                html5QrcodeScanner.render((decodedText) => {
+                    html5QrcodeScanner.clear();
+                    if (decodedText.includes('dados=')) {
+                        const url = new URL(decodedText);
+                        const dados = url.searchParams.get('dados');
+                        processarEExibirDados(dados);
+                    } else {
+                        processarEExibirDados(decodedText);
                     }
-                    deferredPrompt = null;
+                }, (errorMessage) => {
+                    // Erros de leitura contínuos ignorados
                 });
             }
-        });
-
-        let html5QrCode = null;
-        let isScanning = false;
-
-        async function iniciarCameraDirect() {
-            if (!html5QrCode) {
-                html5QrCode = new Html5Qrcode("reader");
-            }
-
-            const qrCodeSuccessCallback = (decodedText) => {
-                if (decodedText.includes('#')) {
-                    window.location.hash = decodedText.split('#')[1];
-                    carregarDados();
-                    pararCamera();
-                } else if (decodedText.includes('|')) {
-                    window.location.hash = decodedText;
-                    carregarDados();
-                    pararCamera();
-                } else {
-                    exibirToast(i18n[currentLang].toastInvalidQr, 'error');
-                }
-            };
-
-            const config = { fps: 10, qrbox: { width: 220, height: 220 } };
-
-            try {
-                await html5QrCode.start(
-                    { facingMode: { exact: "environment" } },
-                    config,
-                    qrCodeSuccessCallback
-                );
-                isScanning = true;
-                document.getElementById('btnToggleCamera').textContent = i18n[currentLang].btnCamClose;
-            } catch (err) {
-                try {
-                    await html5QrCode.start(
-                        { facingMode: "environment" },
-                        config,
-                        qrCodeSuccessCallback
-                    );
-                    isScanning = true;
-                    document.getElementById('btnToggleCamera').textContent = i18n[currentLang].btnCamClose;
-                } catch (fallbackErr) {
-                    console.error("Erro na câmera:", fallbackErr);
-                    exibirToast(i18n[currentLang].toastCamError, 'error');
-                }
-            }
         }
 
-        async function pararCamera() {
-            if (html5QrCode && isScanning) {
-                try {
-                    await html5QrCode.stop();
-                } catch (e) {
-                    console.log("Erro ao desligar a câmera:", e);
-                }
-                isScanning = false;
-                document.getElementById('btnToggleCamera').textContent = i18n[currentLang].btnCamOpen;
-            }
+        function reiniciarLeitor() {
+            window.history.replaceState({}, document.title, window.location.pathname);
+            location.reload();
         }
-
-        document.getElementById('btnToggleCamera').addEventListener('click', () => {
-            if (isScanning) {
-                pararCamera();
-            } else {
-                iniciarCameraDirect();
-            }
-        });
-
-        window.addEventListener('DOMContentLoaded', () => {
-            alterarIdioma(currentLang);
-            verificarStatusApp();
-            carregarInfoDoSW();
-        });
-        window.addEventListener('hashchange', () => carregarDados(true));
-
-        window.addEventListener('visibilitychange', () => {
-            if (document.hidden && isScanning) {
-                pararCamera();
-            }
-        });
-        window.addEventListener('pagehide', pararCamera);
-        
     </script>
 </body>
-
 </html>
