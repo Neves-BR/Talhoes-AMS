@@ -496,32 +496,34 @@
             }, 3500);
         }
 
-        // Tenta invocar o aplicativo nativo via esquema de URL (ex: meuleitor://)
+        // Tenta invocar o aplicativo nativo apenas se houver o parâmetro de dados
         function tentarAbrirAppEVerificarConexao(dados) {
+            if (!dados) return;
+
             const schemeApp = `meuleitor://scan?dados=${encodeURIComponent(dados)}`;
             let mudouDeTela = false;
             
             const onBlur = () => { mudouDeTela = true; };
             window.addEventListener('blur', onBlur);
 
-            // Tenta disparar o App instalado
+            // Tenta disparar o App instalado (Deep Link)
             window.location.href = schemeApp;
 
             setTimeout(() => {
                 window.removeEventListener('blur', onBlur);
                 
-                // Se não mudou de tela, significa que o App NÃO está instalado no dispositivo
+                // Se a janela não perdeu o foco, significa que o App NÃO está instalado
                 if (!mudouDeTela) {
                     if (navigator.onLine) {
-                        // Conectado: Mantém o overlay de instalação ativo para o usuário instalar o PWA
+                        // Online: Permite a exibição da tela/overlay de instalação PWA
                         document.body.classList.remove('is-standalone');
                     } else {
-                        // Sem Conexão: Exibe o alerta notificando a falta de internet
+                        // Offline: Notifica sobre a ausência de internet para instalar
                         document.body.classList.remove('is-standalone');
                         exibirToast(i18n[currentLang].toastNoInternet, 'error');
                     }
                 }
-            }, 1500);
+            }, 1200);
         }
 
         function verificarStatusApp() {
@@ -538,12 +540,14 @@
             }
 
             if (isStandalone) {
-                // APLICATIVO INSTALADO E ABERTO
+                // MODO PWA / APP INSTALADO: Exibe o conteúdo principal diretamente
                 document.body.classList.add('is-standalone');
                 carregarDados(true);
             } else {
-                // NAVEGADOR COMUM
-                if (dadosStr) {
+                // MODO NAVEGADOR COMUM: Exibe a tela de instalação
+                document.body.classList.remove('is-standalone');
+
+                if (dadosStr && navigator.onLine) {
                     tentarAbrirAppEVerificarConexao(dadosStr);
                 } else if (!navigator.onLine) {
                     exibirToast(i18n[currentLang].toastNoInternet, 'error');
@@ -556,7 +560,6 @@
                 }
             }
         }
-
         function carregarDados(exibirToastNotif = true) {
             let hash = window.location.hash.substring(1);
             if (!hash) {
