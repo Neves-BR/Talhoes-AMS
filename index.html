@@ -530,7 +530,7 @@
             const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
                 window.navigator.standalone ||
                 document.referrer.includes('android-app://');
-
+        
             let dadosStr = window.location.hash.substring(1);
             if (!dadosStr) {
                 const params = new URLSearchParams(window.location.search);
@@ -538,21 +538,22 @@
                     dadosStr = params.get('dados');
                 }
             }
-
+        
             if (isStandalone) {
-                // MODO PWA / APP INSTALADO: Exibe o conteúdo principal diretamente
+                // MODO PWA INSTALADO: abre a interface limpa
                 document.body.classList.add('is-standalone');
-                carregarDados(true);
+                carregarDados(!!dadosStr);
             } else {
-                // MODO NAVEGADOR COMUM: Exibe a tela de instalação
+                // MODO NAVEGADOR
                 document.body.classList.remove('is-standalone');
-
+        
+                // Tenta abrir app nativo APENAS se houver dados e estiver online
                 if (dadosStr && navigator.onLine) {
                     tentarAbrirAppEVerificarConexao(dadosStr);
-                } else if (!navigator.onLine) {
+                } else if (!navigator.onLine && dadosStr) {
                     exibirToast(i18n[currentLang].toastNoInternet, 'error');
                 }
-
+        
                 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
                 if (isIOS) {
                     document.getElementById('iosInstructions').style.display = 'block';
@@ -560,6 +561,7 @@
                 }
             }
         }
+        
         function carregarDados(exibirToastNotif = true) {
             let hash = window.location.hash.substring(1);
             if (!hash) {
@@ -568,22 +570,34 @@
                     hash = params.get('dados');
                 }
             }
-            if (!hash) return;
-
+        
+            // Se NÃO houver parâmetros (abertura limpa offline), reseta todos os campos para '-'
+            if (!hash) {
+                document.getElementById('t').textContent = '-';
+                document.getElementById('a').textContent = '-';
+                document.getElementById('e').textContent = '-';
+                document.getElementById('p').textContent = '-';
+                
+                const btnMapa = document.getElementById('m');
+                btnMapa.href = '#';
+                btnMapa.classList.add('disabled');
+                return;
+            }
+        
             let dadosDecodificados;
             try {
                 dadosDecodificados = decodeURIComponent(hash);
             } catch (e) {
                 dadosDecodificados = hash;
             }
-
+        
             const [talhao, area, especie, plantio, mapa] = dadosDecodificados.split('|');
-
+        
             document.getElementById('t').textContent = talhao || '-';
             document.getElementById('a').textContent = area ? `${area} ${i18n[currentLang].unitHa}` : '-';
             document.getElementById('e').textContent = especie || '-';
             document.getElementById('p').textContent = plantio || '-';
-
+        
             const btnMapa = document.getElementById('m');
             if (mapa && mapa !== '#') {
                 btnMapa.href = mapa;
@@ -592,12 +606,11 @@
                 btnMapa.href = '#';
                 btnMapa.classList.add('disabled');
             }
-
+        
             if (exibirToastNotif) {
                 exibirToast(i18n[currentLang].toastSuccess, 'success');
             }
         }
-
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('./sw.js')
                 .then(() => console.log('Service Worker ativo.'))
