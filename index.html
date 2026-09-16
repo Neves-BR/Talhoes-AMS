@@ -627,21 +627,20 @@
             e.preventDefault();
             deferredPrompt = e;
 
-            const btnInstalarModal = document.getElementById('btnInstalarModal');
-            if (btnInstalarModal && !installHandlerVinculado) {
-                installHandlerVinculado = true;
-                btnInstalarModal.addEventListener('click', async () => {
-                    if (!deferredPrompt) return;
-                    deferredPrompt.prompt();
-                    try {
-                        await deferredPrompt.userChoice;
-                    } catch (err) {
-                        console.log('Escolha de instalação interrompida:', err);
+            btnInstalarModal.addEventListener('click', async () => {
+                if (!deferredPrompt) return;
+                deferredPrompt.prompt();
+                try {
+                    const { outcome } = await deferredPrompt.userChoice;
+                    if (outcome === 'accepted') {
+                        // Tenta fechar a aba atual após instalar
+                        window.close();
                     }
-                    deferredPrompt = null;
-                });
-            }
-        });
+                } catch (err) {
+                    console.log('Escolha de instalação interrompida:', err);
+                }
+                deferredPrompt = null;
+            });
 
         let html5QrCode = null;
         let isScanning = false;
