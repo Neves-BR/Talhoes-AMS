@@ -6,6 +6,7 @@ const ASSETS = [
   './index.html',
   './manifest.json',
   './Tucano-mini.png',
+  './sw.js',
   'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js'
 ];
 
