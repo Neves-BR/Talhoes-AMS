@@ -9,7 +9,6 @@
     <title>Informações de campo - Tucano Florestal</title>
     <style>
         html, body {
-            /* Impede o efeito de puxar para atualizar em navegações mobile (Chrome/Safari) */
             overscroll-behavior-y: contain;
         }
         body {
@@ -347,6 +346,9 @@
                 btnInstall: "Instalar Aplicativo",
                 installSafeNote: "Instalação rápida, leve e sem acesso a dados pessoais.",
                 iosInstructions: "No iOS/Safari: toque em <strong>Compartilhar</strong> e selecione <strong>Adicionar à Tela de Início</strong>.",
+                installSuccessTitle: "Instalação Concluída!",
+                installSuccessText: "O aplicativo foi instalado. Você já pode fechar esta aba e abrir o app direto da tela inicial.",
+                btnCloseTab: "Fechar Aba",
                 appTitle: "Informações de campo - Tucano Florestal",
                 lblTalhao: "Talhão",
                 lblArea: "Área do Talhão",
@@ -372,6 +374,9 @@
                 btnInstall: "Install Application",
                 installSafeNote: "Fast, lightweight installation with no access to personal data.",
                 iosInstructions: "On iOS/Safari: tap <strong>Share</strong> and select <strong>Add to Home Screen</strong>.",
+                installSuccessTitle: "Installation Complete!",
+                installSuccessText: "The application was installed. You can close this tab and open the app from your home screen.",
+                btnCloseTab: "Close Tab",
                 appTitle: "Field Data - Tucano Florestal",
                 lblTalhao: "Stand",
                 lblArea: "Productive Area",
@@ -500,7 +505,6 @@
             }, 3500);
         }
 
-        // Tenta invocar o aplicativo nativo apenas se houver o parâmetro de dados
         function tentarAbrirAppEVerificarConexao(dados) {
             if (!dados) return;
 
@@ -510,19 +514,15 @@
             const onBlur = () => { mudouDeTela = true; };
             window.addEventListener('blur', onBlur);
 
-            // Tenta disparar o App instalado (Deep Link)
             window.location.href = schemeApp;
 
             setTimeout(() => {
                 window.removeEventListener('blur', onBlur);
                 
-                // Se a janela não perdeu o foco, significa que o App NÃO está instalado
                 if (!mudouDeTela) {
                     if (navigator.onLine) {
-                        // Online: Permite a exibição da tela/overlay de instalação PWA
                         document.body.classList.remove('is-standalone');
                     } else {
-                        // Offline: Notifica sobre a ausência de internet para instalar
                         document.body.classList.remove('is-standalone');
                         exibirToast(i18n[currentLang].toastNoInternet, 'error');
                     }
@@ -544,14 +544,11 @@
             }
         
             if (isStandalone) {
-                // MODO PWA INSTALADO: abre a interface limpa
                 document.body.classList.add('is-standalone');
                 carregarDados(!!dadosStr);
             } else {
-                // MODO NAVEGADOR
                 document.body.classList.remove('is-standalone');
         
-                // Tenta abrir app nativo APENAS se houver dados e estiver online
                 if (dadosStr && navigator.onLine) {
                     tentarAbrirAppEVerificarConexao(dadosStr);
                 } else if (!navigator.onLine && dadosStr) {
@@ -575,7 +572,6 @@
                 }
             }
         
-            // Se NÃO houver parâmetros (abertura limpa offline), reseta todos os campos para '-'
             if (!hash) {
                 document.getElementById('t').textContent = '-';
                 document.getElementById('a').textContent = '-';
@@ -615,6 +611,7 @@
                 exibirToast(i18n[currentLang].toastSuccess, 'success');
             }
         }
+
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('./sw.js')
                 .then(() => console.log('Service Worker ativo.'))
@@ -622,25 +619,38 @@
         }
 
         let deferredPrompt = null;
-        let installHandlerVinculado = false;
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
 
-            btnInstalarModal.addEventListener('click', async () => {
-                if (!deferredPrompt) return;
-                deferredPrompt.prompt();
-                try {
-                    const { outcome } = await deferredPrompt.userChoice;
-                    if (outcome === 'accepted') {
-                        // Tenta fechar a aba atual após instalar
-                        window.close();
+            const btnInstalarModal = document.getElementById('btnInstalarModal');
+            if (btnInstalarModal) {
+                btnInstalarModal.addEventListener('click', async () => {
+                    if (!deferredPrompt) return;
+                    deferredPrompt.prompt();
+                    try {
+                        const { outcome } = await deferredPrompt.userChoice;
+                        if (outcome === 'accepted') {
+                            // Tenta fechar a janela
+                            window.close();
+
+                            // Fallback visual caso window.close() seja bloqueado pelo navegador
+                            const installBox = document.querySelector('.install-box');
+                            if (installBox) {
+                                installBox.innerHTML = `
+                                    <h3 style="color: #2e7d32;">${i18n[currentLang].installSuccessTitle}</h3>
+                                    <p>${i18n[currentLang].installSuccessText}</p>
+                                    <button class="btn" onclick="window.close()">${i18n[currentLang].btnCloseTab}</button>
+                                `;
+                            }
+                        }
+                    } catch (err) {
+                        console.log('Escolha de instalação interrompida:', err);
                     }
-                } catch (err) {
-                    console.log('Escolha de instalação interrompida:', err);
-                }
-                deferredPrompt = null;
-            });
+                    deferredPrompt = null;
+                });
+            }
+        });
 
         let html5QrCode = null;
         let isScanning = false;
@@ -653,7 +663,6 @@
             const qrCodeSuccessCallback = (decodedText) => {
                 let conteudo = decodedText;
 
-                // 1. Se for uma URL (ex: https://site.com/?dados=AMS001|12.5|...)
                 if (decodedText.includes('dados=')) {
                     try {
                         const urlObj = new URL(decodedText);
@@ -662,15 +671,12 @@
                         conteudo = decodedText.split('dados=')[1] || decodedText;
                     }
                 } 
-                // 2. Se for uma URL com Hash (ex: https://site.com/#AMS001|12.5|...)
                 else if (decodedText.includes('#')) {
                     conteudo = decodedText.split('#')[1];
                 }
 
-                // Normaliza limpando o # inicial se existir
                 conteudo = decodeURIComponent(conteudo).replace(/^#/, '');
 
-                // 3. Valida se possui a estrutura correta com barras "|"
                 if (conteudo.includes('|')) {
                     window.location.hash = conteudo;
                     carregarDados(true);
@@ -726,7 +732,6 @@
         });
 
         window.addEventListener('DOMContentLoaded', () => {
-            // Se houver parâmetros na URL, remove do histórico sem recarregar a página
             if (window.location.hash || window.location.search) {
                 history.replaceState(null, "", window.location.pathname);
             }
@@ -743,7 +748,6 @@
             }
         });
         window.addEventListener('pagehide', pararCamera);
-        
     </script>
 </body>
 
