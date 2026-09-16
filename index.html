@@ -723,6 +723,11 @@
         });
 
         window.addEventListener('DOMContentLoaded', () => {
+            // Se houver parâmetros na URL, remove do histórico sem recarregar a página
+            if (window.location.hash || window.location.search) {
+                history.replaceState(null, "", window.location.pathname);
+            }
+        
             alterarIdioma(currentLang);
             verificarStatusApp();
             carregarInfoDoSW();
