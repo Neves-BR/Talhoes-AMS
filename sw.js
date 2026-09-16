@@ -6,7 +6,7 @@ const ASSETS = [
   './index.html',
   './manifest.json',
   './Tucano-mini.png',
-  'https://unpkg.com/html5-qrcode@2.3.8'
+  'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js'
 ];
 
 // 1. Instalação: Salva os arquivos no cache e força a ativação imediata.
