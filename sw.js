@@ -39,14 +39,22 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// 3. Interceptação de requisições (Cache First com fallback para Rede)
+// 3. Interceptação de requisições: Cache First com fallback para index.html
 self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
+      // Retorna do cache se encontrar o arquivo (ex: imagens, scripts)
       if (cachedResponse) {
         return cachedResponse;
       }
-      return fetch(event.request);
+
+      // Tenta buscar na rede
+      return fetch(event.request).catch(() => {
+        // Se a rede falhar (offline) e for uma navegação de página, retorna o index.html salvo no cache
+        if (event.request.mode === 'navigate') {
+          return caches.match('./index.html');
+        }
+      });
     })
   );
 });
