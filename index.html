@@ -355,6 +355,7 @@
                 toastSuccess: "Informações de campo carregadas com sucesso!",
                 toastInvalidQr: "Formato de QR Code inválido!",
                 toastCamError: "Não foi possível acessar a câmera traseira.",
+                toastNoInternet: "Sem conexão com a internet. Instale o aplicativo previamente para uso offline.",
                 unitHa: "ha",
                 lblDevBy: "Desenvolvido por",
                 lblVersion: "Versão"
@@ -379,6 +380,7 @@
                 toastSuccess: "Field data loaded successfully!",
                 toastInvalidQr: "Invalid QR Code format!",
                 toastCamError: "Unable to access the rear camera.",
+                toastNoInternet: "No internet connection. Please install the app previously for offline use.",
                 unitHa: "ha",
                 lblDevBy: "Developed by",
                 lblVersion: "Version"
@@ -480,19 +482,45 @@
             carregarDados(false);
         }
 
-        // Tenta invocar o leitor/app instalado se houver dados e o leitor nativo estiver configurado
-        function tentarAbrirAppNativo(dados) {
-            if (!dados) return;
+        let toastTimeout = null;
+        function exibirToast(mensagem, tipo = 'success') {
+            const toast = document.getElementById('toast');
+            if (!toast) return;
+
+            clearTimeout(toastTimeout);
+            toast.textContent = mensagem;
+            toast.className = `toast toast-${tipo} show`;
+
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3500);
+        }
+
+        // Tenta invocar o aplicativo nativo via esquema de URL (ex: meuleitor://)
+        function tentarAbrirAppEVerificarConexao(dados) {
             const schemeApp = `meuleitor://scan?dados=${encodeURIComponent(dados)}`;
             let mudouDeTela = false;
             
             const onBlur = () => { mudouDeTela = true; };
             window.addEventListener('blur', onBlur);
 
+            // Tenta disparar o App instalado
             window.location.href = schemeApp;
 
             setTimeout(() => {
                 window.removeEventListener('blur', onBlur);
+                
+                // Se não mudou de tela, significa que o App NÃO está instalado no dispositivo
+                if (!mudouDeTela) {
+                    if (navigator.onLine) {
+                        // Conectado: Mantém o overlay de instalação ativo para o usuário instalar o PWA
+                        document.body.classList.remove('is-standalone');
+                    } else {
+                        // Sem Conexão: Exibe o alerta notificando a falta de internet
+                        document.body.classList.remove('is-standalone');
+                        exibirToast(i18n[currentLang].toastNoInternet, 'error');
+                    }
+                }
             }, 1500);
         }
 
@@ -510,14 +538,15 @@
             }
 
             if (isStandalone) {
+                // APLICATIVO INSTALADO E ABERTO
                 document.body.classList.add('is-standalone');
                 carregarDados(true);
             } else {
-                document.body.classList.remove('is-standalone');
-
-                // Se houver dados e a pessoa estiver no navegador web, tenta invocar o aplicativo instalado
+                // NAVEGADOR COMUM
                 if (dadosStr) {
-                    tentarAbrirAppNativo(dadosStr);
+                    tentarAbrirAppEVerificarConexao(dadosStr);
+                } else if (!navigator.onLine) {
+                    exibirToast(i18n[currentLang].toastNoInternet, 'error');
                 }
 
                 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
@@ -526,20 +555,6 @@
                     document.getElementById('btnInstalarModal').style.display = 'none';
                 }
             }
-        }
-
-        let toastTimeout = null;
-        function exibirToast(mensagem, tipo = 'success') {
-            const toast = document.getElementById('toast');
-            if (!toast) return;
-
-            clearTimeout(toastTimeout);
-            toast.textContent = mensagem;
-            toast.className = `toast toast-${tipo} show`;
-
-            toastTimeout = setTimeout(() => {
-                toast.classList.remove('show');
-            }, 2000);
         }
 
         function carregarDados(exibirToastNotif = true) {
