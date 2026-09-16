@@ -1,52 +1,56 @@
-const CACHE_NAME = 'v1.9.1';
-const DEVELOPER = 'Guilherme Neves';
-
-const ASSETS = [
+const CACHE_NAME = 'v1.9.2';
+const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './manifest.json',
+  './Tucano-min-transparent.png',
   './Tucano-mini.png',
-  'https://unpkg.com/html5-qrcode@2.3.8'
+  'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js'
 ];
 
-// 1. Instalação: Salva os arquivos no cache e força a ativação imediata.
-//    cache.add individual com catch: a falha de UM recurso (ex.: CDN externo)
-//    não impede mais a instalação do Service Worker.
+// Instalação do Service Worker
 self.addEventListener('install', (event) => {
-  event.waitUntil((async () => {
-    const cache = await caches.open(CACHE_NAME);
-    await Promise.all(
-      ASSETS.map((url) =>
-        cache.add(url).catch((err) => console.warn('Falha ao cachear:', url, err))
-      )
-    );
-    await self.skipWaiting(); // Força o novo SW a assumir imediatamente
-  })());
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      console.log('[Service Worker] Armazenando arquivos estáticos em cache');
+      return cache.addAll(ASSETS_TO_CACHE);
+    })
+  );
+  self.skipWaiting();
 });
 
-// 2. Ativação: Limpa caches antigos automaticamente
+// Ativação e limpeza de caches antigos
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
+    caches.keys().then((keyList) => {
       return Promise.all(
-        keys.map((key) => {
+        keyList.map((key) => {
           if (key !== CACHE_NAME) {
+            console.log('[Service Worker] Removendo cache antigo:', key);
             return caches.delete(key);
           }
         })
       );
-    }).then(() => self.clients.claim()) // Assume o controle das páginas abertas
+    })
   );
+  self.clients.claim();
 });
 
-// 3. Interceptação de requisições (Cache First com fallback para Rede)
+// Estratégia de Cache: Network First com fallback para Cache (ideal para offline no campo)
 self.addEventListener('fetch', (event) => {
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(event.request);
-    })
+    fetch(event.request)
+      .then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200 && event.request.method === 'GET') {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
+        }
+        return networkResponse;
+      })
+      .catch(() => {
+        return caches.match(event.request);
+      })
   );
 });
