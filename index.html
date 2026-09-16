@@ -635,19 +635,34 @@
             }
 
             const qrCodeSuccessCallback = (decodedText) => {
-                if (decodedText.includes('#')) {
-                    window.location.hash = decodedText.split('#')[1];
-                    carregarDados();
-                    pararCamera();
-                } else if (decodedText.includes('|')) {
-                    window.location.hash = decodedText;
-                    carregarDados();
+                let conteudo = decodedText;
+
+                // 1. Se for uma URL (ex: https://site.com/?dados=AMS001|12.5|...)
+                if (decodedText.includes('dados=')) {
+                    try {
+                        const urlObj = new URL(decodedText);
+                        conteudo = urlObj.searchParams.get('dados') || decodedText;
+                    } catch (e) {
+                        conteudo = decodedText.split('dados=')[1] || decodedText;
+                    }
+                } 
+                // 2. Se for uma URL com Hash (ex: https://site.com/#AMS001|12.5|...)
+                else if (decodedText.includes('#')) {
+                    conteudo = decodedText.split('#')[1];
+                }
+
+                // Normaliza limpando o # inicial se existir
+                conteudo = decodeURIComponent(conteudo).replace(/^#/, '');
+
+                // 3. Valida se possui a estrutura correta com barras "|"
+                if (conteudo.includes('|')) {
+                    window.location.hash = conteudo;
+                    carregarDados(true);
                     pararCamera();
                 } else {
                     exibirToast(i18n[currentLang].toastInvalidQr, 'error');
                 }
             };
-
             const config = { fps: 10, qrbox: { width: 220, height: 220 } };
 
             try {
