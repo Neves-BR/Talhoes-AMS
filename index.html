@@ -563,54 +563,96 @@
             }
         }
         
-        function carregarDados(exibirToastNotif = true) {
-            let hash = window.location.hash.substring(1);
-            if (!hash) {
-                const params = new URLSearchParams(window.location.search);
-                if (params.has('dados')) {
-                    hash = params.get('dados');
-                }
-            }
+        function formatarDataPlantio(dataStr) {
+    if (!dataStr || dataStr === '-') return '-';
+
+    // Aceita formatos como YYYY-MM-DD, DD/MM/YYYY, MM/YYYY, etc.
+    let ano, mes;
+
+    if (dataStr.includes('-')) {
+        const partes = dataStr.split('-');
+        if (partes[0].length === 4) { // YYYY-MM-DD
+            ano = partes[0];
+            mes = parseInt(partes[1], 10) - 1;
+        } else { // DD-MM-YYYY
+            ano = partes[2];
+            mes = parseInt(partes[1], 10) - 1;
+        }
+    } else if (dataStr.includes('/')) {
+        const partes = dataStr.split('/');
+        if (partes.length === 3) { // DD/MM/YYYY
+            ano = partes[2];
+            mes = parseInt(partes[1], 10) - 1;
+        } else if (partes.length === 2) { // MM/YYYY
+            ano = partes[1];
+            mes = parseInt(partes[0], 10) - 1;
+        }
+    }
+
+    if (mes !== undefined && ano !== undefined && !isNaN(mes)) {
+        // Trata ano em 2 ou 4 dígitos
+        const anoCurto = ano.length === 4 ? ano.slice(-2) : ano;
         
-            if (!hash) {
-                document.getElementById('t').textContent = '-';
-                document.getElementById('a').textContent = '-';
-                document.getElementById('e').textContent = '-';
-                document.getElementById('p').textContent = '-';
-                
-                const btnMapa = document.getElementById('m');
-                btnMapa.href = '#';
-                btnMapa.classList.add('disabled');
-                return;
-            }
+        // Converte o mês para o nome abreviado no idioma selecionado (ex: jan, fev / jan, feb)
+        const date = new Date(2000, mes, 1);
+        const mesAbrev = date.toLocaleString(currentLang === 'pt' ? 'pt-BR' : 'en-US', { month: 'short' }).replace('.', '');
         
-            let dadosDecodificados;
-            try {
-                dadosDecodificados = decodeURIComponent(hash);
-            } catch (e) {
-                dadosDecodificados = hash;
-            }
-        
-            const [talhao, area, especie, plantio, mapa] = dadosDecodificados.split('|');
-        
-            document.getElementById('t').textContent = talhao || '-';
-            document.getElementById('a').textContent = area ? `${area} ${i18n[currentLang].unitHa}` : '-';
-            document.getElementById('e').textContent = especie || '-';
-            document.getElementById('p').textContent = plantio || '-';
-        
-            const btnMapa = document.getElementById('m');
-            if (mapa && mapa !== '#') {
-                btnMapa.href = mapa;
-                btnMapa.classList.remove('disabled');
-            } else {
-                btnMapa.href = '#';
-                btnMapa.classList.add('disabled');
-            }
-        
-            if (exibirToastNotif) {
-                exibirToast(i18n[currentLang].toastSuccess, 'success');
+        return `${mesAbrev.toLowerCase()}/${anoCurto}`;
+    }
+
+    return dataStr; // Retorna o valor original caso o formato não seja reconhecido
+}
+
+    function carregarDados(exibirToastNotif = true) {
+        let hash = window.location.hash.substring(1);
+        if (!hash) {
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('dados')) {
+                hash = params.get('dados');
             }
         }
+
+        if (!hash) {
+            document.getElementById('t').textContent = '-';
+            document.getElementById('a').textContent = '-';
+            document.getElementById('e').textContent = '-';
+            document.getElementById('p').textContent = '-';
+            
+            const btnMapa = document.getElementById('m');
+            btnMapa.href = '#';
+            btnMapa.classList.add('disabled');
+            return;
+        }
+
+        let dadosDecodificados;
+        try {
+            dadosDecodificados = decodeURIComponent(hash);
+        } catch (e) {
+            dadosDecodificados = hash;
+        }
+
+        const [talhao, area, especie, plantio, mapa] = dadosDecodificados.split('|');
+
+        document.getElementById('t').textContent = talhao || '-';
+        document.getElementById('a').textContent = area ? `${area} ${i18n[currentLang].unitHa}` : '-';
+        document.getElementById('e').textContent = especie || '-';
+        
+        // Aplica a formatação 'mmm/aa'
+        document.getElementById('p').textContent = formatarDataPlantio(plantio);
+
+        const btnMapa = document.getElementById('m');
+        if (mapa && mapa !== '#') {
+            btnMapa.href = mapa;
+            btnMapa.classList.remove('disabled');
+        } else {
+            btnMapa.href = '#';
+            btnMapa.classList.add('disabled');
+        }
+
+        if (exibirToastNotif) {
+            exibirToast(i18n[currentLang].toastSuccess, 'success');
+        }
+    }
 
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('./sw.js')
