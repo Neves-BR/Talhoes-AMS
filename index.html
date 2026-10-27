@@ -313,8 +313,11 @@
         </div>
 
         <h2 data-i18n="appTitle">Informações de campo - Tucano Florestal</h2>
-        <div class="item"><span class="label" data-i18n="lblTalhao">Talhão</span><span class="value" id="t">-</span>
-        </div>
+        
+        <!-- Novo campo Fazenda adicionado aqui -->
+        <div class="item"><span class="label" data-i18n="lblFazenda">Fazenda</span><span class="value" id="f">-</span></div>
+        
+        <div class="item"><span class="label" data-i18n="lblTalhao">Talhão</span><span class="value" id="t">-</span></div>
         <div class="item"><span class="label" data-i18n="lblArea">Área do Talhão</span><span class="value"
                 id="a">-</span></div>
         <div class="item"><span class="label" data-i18n="lblEspecie">Espécie</span><span class="value" id="e">-</span>
@@ -350,6 +353,7 @@
                 installSuccessText: "O aplicativo foi instalado. Você já pode fechar esta aba e abrir o app direto da tela inicial.",
                 btnCloseTab: "Fechar Aba",
                 appTitle: "Informações de campo - Tucano Florestal",
+                lblFazenda: "Fazenda",
                 lblTalhao: "Talhão",
                 lblArea: "Área do Talhão",
                 lblEspecie: "Espécie",
@@ -378,6 +382,7 @@
                 installSuccessText: "The application was installed. You can close this tab and open the app from your home screen.",
                 btnCloseTab: "Close Tab",
                 appTitle: "Field Data - Tucano Florestal",
+                lblFazenda: "Farm",
                 lblTalhao: "Stand",
                 lblArea: "Productive Area",
                 lblEspecie: "Specie",
@@ -498,17 +503,7 @@
 
             clearTimeout(toastTimeout);
             toast.textContent = mensagem;
-            toast.className = `toast toast-${tipo} show`;
-
-            toastTimeout = setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3500);
-        }
-
-        function tentarAbrirAppEVerificarConexao(dados) {
-            if (!dados) return;
-
-            const schemeApp = `meuleitor://scan?dados=${encodeURIComponent(dados)}`;
+            toast.className = `toast toast-${tipo} show`;  toastTimeout = setTimeout(() => { toast.classList.remove('show'); }, 3500); }  function tentarAbrirAppEVerificarConexao(dados) { if (!dados) return;  const schemeApp = `meuleitor://scan?dados=${encodeURIComponent(dados)}`;
             let mudouDeTela = false;
             
             const onBlur = () => { mudouDeTela = true; };
@@ -564,95 +559,92 @@
         }
         
         function formatarDataPlantio(dataStr) {
-    if (!dataStr || dataStr === '-') return '-';
+            if (!dataStr || dataStr === '-') return '-';
 
-    // Aceita formatos como YYYY-MM-DD, DD/MM/YYYY, MM/YYYY, etc.
-    let ano, mes;
+            let ano, mes;
 
-    if (dataStr.includes('-')) {
-        const partes = dataStr.split('-');
-        if (partes[0].length === 4) { // YYYY-MM-DD
-            ano = partes[0];
-            mes = parseInt(partes[1], 10) - 1;
-        } else { // DD-MM-YYYY
-            ano = partes[2];
-            mes = parseInt(partes[1], 10) - 1;
+            if (dataStr.includes('-')) {
+                const partes = dataStr.split('-');
+                if (partes[0].length === 4) { // YYYY-MM-DD
+                    ano = partes[0];
+                    mes = parseInt(partes[1], 10) - 1;
+                } else { // DD-MM-YYYY
+                    ano = partes[2];
+                    mes = parseInt(partes[1], 10) - 1;
+                }
+            } else if (dataStr.includes('/')) {
+                const partes = dataStr.split('/');
+                if (partes.length === 3) { // DD/MM/YYYY
+                    ano = partes[2];
+                    mes = parseInt(partes[1], 10) - 1;
+                } else if (partes.length === 2) { // MM/YYYY
+                    ano = partes[1];
+                    mes = parseInt(partes[0], 10) - 1;
+                }
+            }
+
+            if (mes !== undefined && ano !== undefined && !isNaN(mes)) {
+                const anoCurto = ano.length === 4 ? ano.slice(-2) : ano;
+                const date = new Date(2000, mes, 1);
+                const mesAbrev = date.toLocaleString(currentLang === 'pt' ? 'pt-BR' : 'en-US', { month: 'short' }).replace('.', '');
+                
+                return `${mesAbrev.toLowerCase()}/${anoCurto}`;
+            }
+
+            return dataStr;
         }
-    } else if (dataStr.includes('/')) {
-        const partes = dataStr.split('/');
-        if (partes.length === 3) { // DD/MM/YYYY
-            ano = partes[2];
-            mes = parseInt(partes[1], 10) - 1;
-        } else if (partes.length === 2) { // MM/YYYY
-            ano = partes[1];
-            mes = parseInt(partes[0], 10) - 1;
-        }
-    }
 
-    if (mes !== undefined && ano !== undefined && !isNaN(mes)) {
-        // Trata ano em 2 ou 4 dígitos
-        const anoCurto = ano.length === 4 ? ano.slice(-2) : ano;
-        
-        // Converte o mês para o nome abreviado no idioma selecionado (ex: jan, fev / jan, feb)
-        const date = new Date(2000, mes, 1);
-        const mesAbrev = date.toLocaleString(currentLang === 'pt' ? 'pt-BR' : 'en-US', { month: 'short' }).replace('.', '');
-        
-        return `${mesAbrev.toLowerCase()}/${anoCurto}`;
-    }
+        function carregarDados(exibirToastNotif = true) {
+            let hash = window.location.hash.substring(1);
+            if (!hash) {
+                const params = new URLSearchParams(window.location.search);
+                if (params.has('dados')) {
+                    hash = params.get('dados');
+                }
+            }
 
-    return dataStr; // Retorna o valor original caso o formato não seja reconhecido
-}
+            if (!hash) {
+                document.getElementById('f').textContent = '-';
+                document.getElementById('t').textContent = '-';
+                document.getElementById('a').textContent = '-';
+                document.getElementById('e').textContent = '-';
+                document.getElementById('p').textContent = '-';
+                
+                const btnMapa = document.getElementById('m');
+                btnMapa.href = '#';
+                btnMapa.classList.add('disabled');
+                return;
+            }
 
-    function carregarDados(exibirToastNotif = true) {
-        let hash = window.location.hash.substring(1);
-        if (!hash) {
-            const params = new URLSearchParams(window.location.search);
-            if (params.has('dados')) {
-                hash = params.get('dados');
+            let dadosDecodificados;
+            try {
+                dadosDecodificados = decodeURIComponent(hash);
+            } catch (e) {
+                dadosDecodificados = hash;
+            }
+
+            // Ordem atualizada: Fazenda | Talhão | Área | Espécie | Plantio | Mapa
+            const [fazenda, talhao, area, especie, plantio, mapa] = dadosDecodificados.split('|');
+
+            document.getElementById('f').textContent = fazenda || '-';
+            document.getElementById('t').textContent = talhao || '-';
+            document.getElementById('a').textContent = area ? `${area}${i18n[currentLang].unitHa}` : '-';
+            document.getElementById('e').textContent = especie || '-';
+            document.getElementById('p').textContent = formatarDataPlantio(plantio);
+
+            const btnMapa = document.getElementById('m');
+            if (mapa && mapa !== '#') {
+                btnMapa.href = mapa;
+                btnMapa.classList.remove('disabled');
+            } else {
+                btnMapa.href = '#';
+                btnMapa.classList.add('disabled');
+            }
+
+            if (exibirToastNotif) {
+                exibirToast(i18n[currentLang].toastSuccess, 'success');
             }
         }
-
-        if (!hash) {
-            document.getElementById('t').textContent = '-';
-            document.getElementById('a').textContent = '-';
-            document.getElementById('e').textContent = '-';
-            document.getElementById('p').textContent = '-';
-            
-            const btnMapa = document.getElementById('m');
-            btnMapa.href = '#';
-            btnMapa.classList.add('disabled');
-            return;
-        }
-
-        let dadosDecodificados;
-        try {
-            dadosDecodificados = decodeURIComponent(hash);
-        } catch (e) {
-            dadosDecodificados = hash;
-        }
-
-        const [talhao, area, especie, plantio, mapa] = dadosDecodificados.split('|');
-
-        document.getElementById('t').textContent = talhao || '-';
-        document.getElementById('a').textContent = area ? `${area} ${i18n[currentLang].unitHa}` : '-';
-        document.getElementById('e').textContent = especie || '-';
-        
-        // Aplica a formatação 'mmm/aa'
-        document.getElementById('p').textContent = formatarDataPlantio(plantio);
-
-        const btnMapa = document.getElementById('m');
-        if (mapa && mapa !== '#') {
-            btnMapa.href = mapa;
-            btnMapa.classList.remove('disabled');
-        } else {
-            btnMapa.href = '#';
-            btnMapa.classList.add('disabled');
-        }
-
-        if (exibirToastNotif) {
-            exibirToast(i18n[currentLang].toastSuccess, 'success');
-        }
-    }
 
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('./sw.js')
@@ -673,10 +665,8 @@
                     try {
                         const { outcome } = await deferredPrompt.userChoice;
                         if (outcome === 'accepted') {
-                            // Tenta fechar a janela
                             window.close();
 
-                            // Fallback visual caso window.close() seja bloqueado pelo navegador
                             const installBox = document.querySelector('.install-box');
                             if (installBox) {
                                 installBox.innerHTML = `
