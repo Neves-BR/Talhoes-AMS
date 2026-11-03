@@ -325,7 +325,7 @@
         <div id="mapContainer" style="display: none; margin-top: 15px; width: 100%; height: 220px; background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 8px; box-sizing: border-box; overflow: hidden; text-align: center; position: relative;">
             <svg id="talhaoSvg" width="100%" height="100%" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice">
                 <!-- Imagem alterada dinamicamente via JS -->
-                <image id="bgFazendaImage" href="./Mapas/padrao." x="0" y="0" width="1000" height="1000" preserveAspectRatio="none" />
+                <image id="bgFazendaImage" href="./Mapas/padrao.png" x="0" y="0" width="1000" height="1000" preserveAspectRatio="none" />
                 <polygon id="polygonTalhao" points="" fill="#2e7d32" fill-opacity="0.6" stroke="#ffffff" stroke-width="3" />
             </svg>
         </div>
@@ -673,6 +673,15 @@
             const btnMapa = document.getElementById('m');
             const mapContainer = document.getElementById('mapContainer');
             const polygon = document.getElementById('polygonTalhao');
+                    
+            let dadosDecodificados;
+            try {
+                dadosDecodificados = decodeURIComponent(hash);
+            } catch (e) {
+                dadosDecodificados = hash;
+            }
+        
+            const [fazenda, talhao, area, especie, plantio, mapa] = dadosDecodificados.split('|');
             const bgImg = document.getElementById('bgFazendaImage');
                 if (bgImg) {
                     bgImg.setAttribute('href', obterCaminhoImagemFazenda(fazenda));
@@ -691,16 +700,6 @@
                 polygon.setAttribute('points', '');
                 return;
             }
-        
-            let dadosDecodificados;
-            try {
-                dadosDecodificados = decodeURIComponent(hash);
-            } catch (e) {
-                dadosDecodificados = hash;
-            }
-        
-            const [fazenda, talhao, area, especie, plantio, mapa] = dadosDecodificados.split('|');
-        
             let areaFormatada = area;
             if (area) {
                 if (currentLang === 'pt') {
