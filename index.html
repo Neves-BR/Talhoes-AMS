@@ -314,18 +314,19 @@
 
         <h2 data-i18n="appTitle">Informações de campo - Tucano Florestal</h2>
         
-        <!-- Novo campo Fazenda adicionado aqui -->
         <div class="item"><span class="label" data-i18n="lblFazenda">Fazenda</span><span class="value" id="f">-</span></div>
-        
         <div class="item"><span class="label" data-i18n="lblTalhao">Talhão</span><span class="value" id="t">-</span></div>
-        <div class="item"><span class="label" data-i18n="lblArea">Área do Talhão</span><span class="value"
-                id="a">-</span></div>
-        <div class="item"><span class="label" data-i18n="lblEspecie">Espécie</span><span class="value" id="e">-</span>
-        </div>
-        <div class="item"><span class="label" data-i18n="lblPlantio">Data de Plantio</span><span class="value"
-                id="p">-</span></div>
+        <div class="item"><span class="label" data-i18n="lblArea">Área do Talhão</span><span class="value" id="a">-</span></div>
+        <div class="item"><span class="label" data-i18n="lblEspecie">Espécie</span><span class="value" id="e">-</span></div>
+        <div class="item"><span class="label" data-i18n="lblPlantio">Data de Plantio</span><span class="value" id="p">-</span></div>
 
-        <a id="m" href="#" target="_blank" class="btn" data-i18n="btnMap">Visualizar Mapa (PDF)</a>
+        <button id="m" class="btn disabled" data-i18n="btnMapShow">Visualizar Mapa</button>
+
+        <div id="mapContainer" style="display: none; margin-top: 15px; width: 100%; height: 220px; background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 8px; box-sizing: border-box; padding: 10px; text-align: center;">
+            <svg id="talhaoSvg" width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+                <polygon id="polygonTalhao" points="" fill="#2e7d32" fill-opacity="0.35" stroke="#2e7d32" stroke-width="2" />
+            </svg>
+        </div>
 
         <div id="reader-container">
             <span class="label" style="margin-bottom: 8px;" data-i18n="lblScanner">Scanner QR Code</span>
@@ -358,7 +359,8 @@
                 lblArea: "Área do Talhão",
                 lblEspecie: "Espécie",
                 lblPlantio: "Data de Plantio",
-                btnMap: "Visualizar Mapa",
+                btnMapShow: "Visualizar Mapa",
+                btnMapHide: "Ocultar Mapa",
                 lblScanner: "Scanner QR Code",
                 btnCamOpen: "Abrir Câmera Traseira",
                 btnCamClose: "Fechar Câmera",
@@ -387,7 +389,8 @@
                 lblArea: "Productive Area",
                 lblEspecie: "Specie",
                 lblPlantio: "Planting Date",
-                btnMap: "View Map",
+                btnMapShow: "View Map",
+                btnMapHide: "Hide Map",
                 lblScanner: "QR Code Scanner",
                 btnCamOpen: "Open Rear Camera",
                 btnCamClose: "Close Camera",
@@ -493,6 +496,19 @@
                 btnCam.textContent = isScanning ? i18n[lang].btnCamClose : i18n[lang].btnCamOpen;
             }
 
+            // Atualiza texto do botão do mapa se não estiver desabilitado
+            const btnMapa = document.getElementById('m');
+            const mapContainer = document.getElementById('mapContainer');
+            if (!btnMapa.classList.contains('disabled')) {
+                if (mapContainer.style.display === 'none') {
+                    btnMapa.textContent = i18n[lang].btnMapShow;
+                } else {
+                    btnMapa.textContent = i18n[lang].btnMapHide;
+                }
+            } else {
+                btnMapa.textContent = i18n[lang].btnMapShow;
+            }
+
             carregarDados(false);
         }
 
@@ -503,7 +519,13 @@
 
             clearTimeout(toastTimeout);
             toast.textContent = mensagem;
-            toast.className = `toast toast-${tipo} show`;  toastTimeout = setTimeout(() => { toast.classList.remove('show'); }, 3500); }  function tentarAbrirAppEVerificarConexao(dados) { if (!dados) return;  const schemeApp = `meuleitor://scan?dados=${encodeURIComponent(dados)}`;
+            toast.className = `toast toast-${tipo} show`; 
+            toastTimeout = setTimeout(() => { toast.classList.remove('show'); }, 3500); 
+        } 
+
+        function tentarAbrirAppEVerificarConexao(dados) { 
+            if (!dados) return; 
+            const schemeApp = `meuleitor://scan?dados=${encodeURIComponent(dados)}`;
             let mudouDeTela = false;
             
             const onBlur = () => { mudouDeTela = true; };
@@ -603,6 +625,10 @@
                 }
             }
         
+            const btnMapa = document.getElementById('m');
+            const mapContainer = document.getElementById('mapContainer');
+            const polygon = document.getElementById('polygonTalhao');
+
             if (!hash) {
                 document.getElementById('f').textContent = '-';
                 document.getElementById('t').textContent = '-';
@@ -610,9 +636,10 @@
                 document.getElementById('e').textContent = '-';
                 document.getElementById('p').textContent = '-';
                 
-                const btnMapa = document.getElementById('m');
-                btnMapa.href = '#';
                 btnMapa.classList.add('disabled');
+                btnMapa.textContent = i18n[currentLang].btnMapShow;
+                mapContainer.style.display = 'none';
+                polygon.setAttribute('points', '');
                 return;
             }
         
@@ -623,16 +650,14 @@
                 dadosDecodificados = hash;
             }
         
-            // Ordem atualizada: Fazenda | Talhão | Área | Espécie | Plantio | Mapa
             const [fazenda, talhao, area, especie, plantio, mapa] = dadosDecodificados.split('|');
         
-            // Formatação do separador decimal para a área
             let areaFormatada = area;
             if (area) {
                 if (currentLang === 'pt') {
-                    areaFormatada = area.replace('.', ','); // Troca ponto por vírgula no PT
+                    areaFormatada = area.replace('.', ','); 
                 } else {
-                    areaFormatada = area.replace(',', '.'); // Garante uso do ponto no EN
+                    areaFormatada = area.replace(',', '.'); 
                 }
             }
         
@@ -642,20 +667,19 @@
             document.getElementById('e').textContent = especie || '-';
             document.getElementById('p').textContent = formatarDataPlantio(plantio);
         
-            const btnMapa = document.getElementById('m');
-                if (mapa && mapa !== '#') {
-                    if (mapa.startsWith('geo:')) {
-                        // Abre o app nativo de GPS offline do dispositivo
-                        btnMapa.href = mapa; 
-                        btnMapa.textContent = "Abrir GPS Local";
-                    } else {
-                        btnMapa.href = mapa;
-                    }
-                    btnMapa.classList.remove('disabled');
-                } else {
-                    btnMapa.href = '#';
-                    btnMapa.classList.add('disabled');
-                }
+            // Lógica do SVG Map
+            mapContainer.style.display = 'none';
+            if (mapa && mapa.startsWith('POLY:')) {
+                const pontos = mapa.replace('POLY:', '').trim();
+                polygon.setAttribute('points', pontos);
+                
+                btnMapa.classList.remove('disabled');
+                btnMapa.textContent = i18n[currentLang].btnMapShow;
+            } else {
+                polygon.setAttribute('points', '');
+                btnMapa.classList.add('disabled');
+                btnMapa.textContent = i18n[currentLang].btnMapShow;
+            }
         
             if (exibirToastNotif) {
                 exibirToast(i18n[currentLang].toastSuccess, 'success');
@@ -787,6 +811,23 @@
             alterarIdioma(currentLang);
             verificarStatusApp();
             carregarInfoDoSW();
+
+            // Adicionado evento de clique para alternar o mapa
+            document.getElementById('m').addEventListener('click', (e) => {
+                e.preventDefault();
+                const mapContainer = document.getElementById('mapContainer');
+                const btnMapa = document.getElementById('m');
+
+                if (btnMapa.classList.contains('disabled')) return;
+
+                if (mapContainer.style.display === 'none' || mapContainer.style.display === '') {
+                    mapContainer.style.display = 'block';
+                    btnMapa.textContent = i18n[currentLang].btnMapHide;
+                } else {
+                    mapContainer.style.display = 'none';
+                    btnMapa.textContent = i18n[currentLang].btnMapShow;
+                }
+            });
         });
         window.addEventListener('hashchange', () => carregarDados(true));
 
