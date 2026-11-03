@@ -322,11 +322,11 @@
 
         <button id="m" class="btn disabled" data-i18n="btnMapShow">Visualizar Mapa</button>
 
-        <div id="mapContainer" style="display: none; margin-top: 15px; width: 100%; height: 220px; background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 8px; box-sizing: border-box; overflow: hidden; text-align: center; position: relative;">
-            <svg id="talhaoSvg" width="100%" height="100%" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice">
-                <!-- Imagem alterada dinamicamente via JS -->
+        <div id="mapContainer" style="display: none; margin-top: 15px; width: 100%; height: 220px; background: #111; border: 1px solid #c8e6c9; border-radius: 8px; box-sizing: border-box; overflow: hidden; text-align: center; position: relative;">
+            <svg id="talhaoSvg" width="100%" height="100%" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet">
+                <!-- x="0" y="0" width="1000" height="1000" e preserveAspectRatio="none" mantidos para alinhar com o viewBox (0,0,1000,1000) -->
                 <image id="bgFazendaImage" href="./Mapas/padrao.png" x="0" y="0" width="1000" height="1000" preserveAspectRatio="none" />
-                <polygon id="polygonTalhao" points="" fill="#2e7d32" fill-opacity="0.6" stroke="#ffffff" stroke-width="3" />
+                <polygon id="polygonTalhao" points="" fill="#2e7d32" fill-opacity="0.55" stroke="#ffffff" stroke-width="2.5" />
             </svg>
         </div>
 
@@ -619,7 +619,7 @@
         }
         // Função para calcular o zoom (viewBox) com base no polígono lido
         function calcularZoom(pontos) {
-            if (!pontos) return "0 0 1000 1000"; // Se não houver pontos, mostra o mapa todo
+            if (!pontos) return "0 0 1000 1000";
             
             const pares = pontos.trim().split(/\s+/);
             let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -637,17 +637,38 @@
                     }
                 }
             });
-
+        
             if (minX === Infinity) return "0 0 1000 1000";
-
+        
+            // Ponto central do talhão
+            const centroX = (minX + maxX) / 2;
+            const centroY = (minY + maxY) / 2;
+        
+            // Tamanho do talhão
             const w = maxX - minX;
             const h = maxY - minY;
-            
-            // Adiciona uma margem de segurança (padding) de 40% ao redor do polígono para não ficar colado nas bordas
-            const padX = w * 0.4 || 50; 
-            const padY = h * 0.4 || 50;
-            
-            return `${minX - padX} ${minY - padY} ${w + padX * 2} ${h + padY * 2}`;
+        
+            // Obtém a proporção real da div #mapContainer na tela do telemóvel
+            const container = document.getElementById('mapContainer');
+            const larguraContainer = container.clientWidth || 320;
+            const alturaContainer = container.clientHeight || 220;
+            const proporcaoTela = larguraContainer / alturaContainer;
+        
+            // Determina o tamanho da janela de zoom com margem (padding)
+            let zoomW = w * 1.6;
+            let zoomH = h * 1.6;
+        
+            // Garante que a janela de zoom tenha a mesma proporção da tela do celular
+            if (zoomW / zoomH > proporcaoTela) {
+                zoomH = zoomW / proporcaoTela;
+            } else {
+                zoomW = zoomH * proporcaoTela;
+            }
+        
+            const startX = centroX - (zoomW / 2);
+            const startY = centroY - (zoomH / 2);
+        
+            return `${startX} ${startY} ${zoomW} ${zoomH}`;
         }
         function obterCaminhoImagemFazenda(nomeFazenda) {
             if (!nomeFazenda || nomeFazenda === '-') return './Mapas/padrao.png';
