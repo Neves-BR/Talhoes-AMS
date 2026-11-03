@@ -322,9 +322,11 @@
 
         <button id="m" class="btn disabled" data-i18n="btnMapShow">Visualizar Mapa</button>
 
-        <div id="mapContainer" style="display: none; margin-top: 15px; width: 100%; height: 220px; background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 8px; box-sizing: border-box; padding: 10px; text-align: center;">
-            <svg id="talhaoSvg" width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
-                <polygon id="polygonTalhao" points="" fill="#2e7d32" fill-opacity="0.35" stroke="#2e7d32" stroke-width="2" />
+        <div id="mapContainer" style="display: none; margin-top: 15px; width: 100%; height: 220px; background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 8px; box-sizing: border-box; overflow: hidden; text-align: center; position: relative;">
+            <svg id="talhaoSvg" width="100%" height="100%" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice">
+                <!-- Imagem alterada dinamicamente via JS -->
+                <image id="bgFazendaImage" href="./mapas/padrao.jpg" x="0" y="0" width="1000" height="1000" preserveAspectRatio="none" />
+                <polygon id="polygonTalhao" points="" fill="#2e7d32" fill-opacity="0.6" stroke="#ffffff" stroke-width="3" />
             </svg>
         </div>
 
@@ -615,7 +617,50 @@
 
             return dataStr;
         }
+        // Função para calcular o zoom (viewBox) com base no polígono lido
+        function calcularZoom(pontos) {
+            if (!pontos) return "0 0 1000 1000"; // Se não houver pontos, mostra o mapa todo
+            
+            const pares = pontos.trim().split(/\s+/);
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            
+            pares.forEach(par => {
+                const coords = par.split(',');
+                if (coords.length === 2) {
+                    const x = parseFloat(coords[0]);
+                    const y = parseFloat(coords[1]);
+                    if (!isNaN(x) && !isNaN(y)) {
+                        if (x < minX) minX = x;
+                        if (x > maxX) maxX = x;
+                        if (y < minY) minY = y;
+                        if (y > maxY) maxY = y;
+                    }
+                }
+            });
 
+            if (minX === Infinity) return "0 0 1000 1000";
+
+            const w = maxX - minX;
+            const h = maxY - minY;
+            
+            // Adiciona uma margem de segurança (padding) de 40% ao redor do polígono para não ficar colado nas bordas
+            const padX = w * 0.4 || 50; 
+            const padY = h * 0.4 || 50;
+            
+            return `${minX - padX} ${minY - padY} ${w + padX * 2} ${h + padY * 2}`;
+        }
+        function obterCaminhoImagemFazenda(nomeFazenda) {
+            if (!nomeFazenda || nomeFazenda === '-') return './mapas/padrao.jpg';
+            
+            const slug = nomeFazenda
+                .toLowerCase()
+                .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Remove acentos
+                .replace(/[^a-z0-9]/g, "-")                     // Substitui espaços e símbolos por hífen
+                .replace(/-+/g, "-")                            // Remove hífens duplicados
+                .replace(/^-|-$/g, "");                         // Remove hífens nas pontas
+
+            return `./mapas/${slug}.jpg`;
+        }
         function carregarDados(exibirToastNotif = true) {
             let hash = window.location.hash.substring(1);
             if (!hash) {
@@ -628,6 +673,10 @@
             const btnMapa = document.getElementById('m');
             const mapContainer = document.getElementById('mapContainer');
             const polygon = document.getElementById('polygonTalhao');
+            const bgImg = document.getElementById('bgFazendaImage');
+                if (bgImg) {
+                    bgImg.setAttribute('href', obterCaminhoImagemFazenda(fazenda));
+                }
 
             if (!hash) {
                 document.getElementById('f').textContent = '-';
@@ -666,23 +715,27 @@
             document.getElementById('a').textContent = areaFormatada ? `${areaFormatada}${i18n[currentLang].unitHa}` : '-';
             document.getElementById('e').textContent = especie || '-';
             document.getElementById('p').textContent = formatarDataPlantio(plantio);
-        
-            // Lógica do SVG Map
+            
+            
+            // Lógica do SVG Map atualizada
             mapContainer.style.display = 'none';
+            const svgElement = document.getElementById('talhaoSvg');
+
             if (mapa && mapa.startsWith('POLY:')) {
                 const pontos = mapa.replace('POLY:', '').trim();
                 polygon.setAttribute('points', pontos);
+                
+                // Aplica o zoom dinâmico centrado no talhão
+                const viewBoxZoom = calcularZoom(pontos);
+                svgElement.setAttribute('viewBox', viewBoxZoom);
                 
                 btnMapa.classList.remove('disabled');
                 btnMapa.textContent = i18n[currentLang].btnMapShow;
             } else {
                 polygon.setAttribute('points', '');
+                svgElement.setAttribute('viewBox', '0 0 1000 1000'); // Reseta o zoom
                 btnMapa.classList.add('disabled');
                 btnMapa.textContent = i18n[currentLang].btnMapShow;
-            }
-        
-            if (exibirToastNotif) {
-                exibirToast(i18n[currentLang].toastSuccess, 'success');
             }
         }
 
