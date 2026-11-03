@@ -366,7 +366,7 @@
                 toastInvalidQr: "Formato de QR Code inválido!",
                 toastCamError: "Não foi possível acessar a câmera traseira.",
                 toastNoInternet: "Sem conexão com a internet. Instale o aplicativo previamente para uso offline.",
-                unitHa: "ha",
+                unitHa: " ha",
                 lblDevBy: "Desenvolvido por",
                 lblVersion: "Versão"
             },
@@ -395,7 +395,7 @@
                 toastInvalidQr: "Invalid QR Code format!",
                 toastCamError: "Unable to access the rear camera.",
                 toastNoInternet: "No internet connection. Please install the app previously for offline use.",
-                unitHa: "ha",
+                unitHa: " ha",
                 lblDevBy: "Developed by",
                 lblVersion: "Version"
             }
@@ -602,7 +602,7 @@
                     hash = params.get('dados');
                 }
             }
-
+        
             if (!hash) {
                 document.getElementById('f').textContent = '-';
                 document.getElementById('t').textContent = '-';
@@ -615,23 +615,33 @@
                 btnMapa.classList.add('disabled');
                 return;
             }
-
+        
             let dadosDecodificados;
             try {
                 dadosDecodificados = decodeURIComponent(hash);
             } catch (e) {
                 dadosDecodificados = hash;
             }
-
+        
             // Ordem atualizada: Fazenda | Talhão | Área | Espécie | Plantio | Mapa
             const [fazenda, talhao, area, especie, plantio, mapa] = dadosDecodificados.split('|');
-
+        
+            // Formatação do separador decimal para a área
+            let areaFormatada = area;
+            if (area) {
+                if (currentLang === 'pt') {
+                    areaFormatada = area.replace('.', ','); // Troca ponto por vírgula no PT
+                } else {
+                    areaFormatada = area.replace(',', '.'); // Garante uso do ponto no EN
+                }
+            }
+        
             document.getElementById('f').textContent = fazenda || '-';
             document.getElementById('t').textContent = talhao || '-';
-            document.getElementById('a').textContent = area ? `${area}${i18n[currentLang].unitHa}` : '-';
+            document.getElementById('a').textContent = areaFormatada ? `${areaFormatada}${i18n[currentLang].unitHa}` : '-';
             document.getElementById('e').textContent = especie || '-';
             document.getElementById('p').textContent = formatarDataPlantio(plantio);
-
+        
             const btnMapa = document.getElementById('m');
             if (mapa && mapa !== '#') {
                 btnMapa.href = mapa;
@@ -640,7 +650,7 @@
                 btnMapa.href = '#';
                 btnMapa.classList.add('disabled');
             }
-
+        
             if (exibirToastNotif) {
                 exibirToast(i18n[currentLang].toastSuccess, 'success');
             }
