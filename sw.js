@@ -1,4 +1,4 @@
-const CACHE_NAME = 'v0.9.3.6';
+const CACHE_NAME = 'v0.9.3.7';
 const DEVELOPER = 'Guilherme Neves';
 
 const ASSETS = [
@@ -10,9 +10,7 @@ const ASSETS = [
   'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js'
 ];
 
-// 1. Instalação: Salva os arquivos no cache e força a ativação imediata.
-//    cache.add individual com catch: a falha de UM recurso (ex.: CDN externo)
-//    não impede mais a instalação do Service Worker.
+// 1. Instalação: Salva os arquivos estáticos essenciais no cache inicial
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_NAME);
@@ -25,7 +23,7 @@ self.addEventListener('install', (event) => {
   })());
 });
 
-// 2. Ativação: Limpa caches antigos automaticamente
+// 2. Ativação: Limpa caches antigos de versões anteriores
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
@@ -40,22 +38,36 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// 3. Interceptação de requisições: Cache First com fallback para index.html
+// 3. Interceptação de requisições: Cache First + Gravação Dinâmica de novos mapas
 self.addEventListener('fetch', (event) => {
+  // Ignora requisições que não sejam GET
+  if (event.request.method !== 'GET') return;
+
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      // Retorna do cache se encontrar o arquivo (ex: imagens, scripts)
+    (async () => {
+      // 1. Verifica se a imagem/recurso já está gravado no cache
+      const cachedResponse = await caches.match(event.request);
       if (cachedResponse) {
         return cachedResponse;
       }
 
-      // Tenta buscar na rede
-      return fetch(event.request).catch(() => {
-        // Se a rede falhar (offline) e for uma navegação de página, retorna o index.html salvo no cache
-        if (event.request.mode === 'navigate') {
-          return caches.match('./index.html');
+      // 2. Se não estiver no cache, busca na rede e salva no cache dinamicamente
+      try {
+        const networkResponse = await fetch(event.request);
+
+        // Se for uma resposta válida (ex: 200 OK para o novo mapa .jpg), grava no cache
+        if (networkResponse && (networkResponse.status === 200 || networkResponse.type === 'opaque')) {
+          const cache = await caches.open(CACHE_NAME);
+          cache.put(event.request, networkResponse.clone());
         }
-      });
-    })
+
+        return networkResponse;
+      } catch (error) {
+        // 3. Se estiver offline e for navegação de página, retorna o index.html principal
+        if (event.request.mode === 'navigate') {
+          return await caches.match('./index.html');
+        }
+      }
+    })()
   );
 });
