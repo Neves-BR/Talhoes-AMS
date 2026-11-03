@@ -643,13 +643,19 @@
             document.getElementById('p').textContent = formatarDataPlantio(plantio);
         
             const btnMapa = document.getElementById('m');
-            if (mapa && mapa !== '#') {
-                btnMapa.href = mapa;
-                btnMapa.classList.remove('disabled');
-            } else {
-                btnMapa.href = '#';
-                btnMapa.classList.add('disabled');
-            }
+                if (mapa && mapa !== '#') {
+                    if (mapa.startsWith('geo:')) {
+                        // Abre o app nativo de GPS offline do dispositivo
+                        btnMapa.href = mapa; 
+                        btnMapa.textContent = "Abrir GPS Local";
+                    } else {
+                        btnMapa.href = mapa;
+                    }
+                    btnMapa.classList.remove('disabled');
+                } else {
+                    btnMapa.href = '#';
+                    btnMapa.classList.add('disabled');
+                }
         
             if (exibirToastNotif) {
                 exibirToast(i18n[currentLang].toastSuccess, 'success');
