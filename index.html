@@ -324,9 +324,9 @@
 
         <div id="mapContainer" style="display: none; margin-top: 15px; width: 100%; height: 220px; background: #111; border: 1px solid #c8e6c9; border-radius: 8px; box-sizing: border-box; overflow: hidden; text-align: center; position: relative;">
             <svg id="talhaoSvg" width="100%" height="100%" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet">
-                <!-- x="0" y="0" width="1000" height="1000" e preserveAspectRatio="none" mantidos para alinhar com o viewBox (0,0,1000,1000) -->
                 <image id="bgFazendaImage" href="./Mapas/padrao.png" x="0" y="0" width="1000" height="1000" preserveAspectRatio="none" />
-                <polygon id="polygonTalhao" points="" fill="#2e7d32" fill-opacity="0.55" stroke="#ffffff" stroke-width="2.5" />
+                <!-- Alterado de <polygon> para <path> para aceitar múltiplas partes/geometrias independentes sem linhas entre elas -->
+                <path id="polygonTalhao" d="" fill="#2e7d32" fill-opacity="0.55" stroke="#ffffff" stroke-width="2.5" fill-rule="evenodd" />
             </svg>
         </div>
 
@@ -498,17 +498,16 @@
                 btnCam.textContent = isScanning ? i18n[lang].btnCamClose : i18n[lang].btnCamOpen;
             }
 
-            // Atualiza texto do botão do mapa se não estiver desabilitado
             const btnMapa = document.getElementById('m');
             const mapContainer = document.getElementById('mapContainer');
             if (!btnMapa.classList.contains('disabled')) {
                 if (mapContainer.style.display === 'none') {
-                    btnMapa.textContent = i18n[lang].btnMapShow;
+                    btnMapa.textContent = i18n[currentLang].btnMapShow;
                 } else {
-                    btnMapa.textContent = i18n[lang].btnMapHide;
+                    btnMapa.textContent = i18n[currentLang].btnMapHide;
                 }
             } else {
-                btnMapa.textContent = i18n[lang].btnMapShow;
+                btnMapa.textContent = i18n[currentLang].btnMapShow;
             }
 
             carregarDados(false);
@@ -589,19 +588,19 @@
 
             if (dataStr.includes('-')) {
                 const partes = dataStr.split('-');
-                if (partes[0].length === 4) { // YYYY-MM-DD
+                if (partes[0].length === 4) {
                     ano = partes[0];
                     mes = parseInt(partes[1], 10) - 1;
-                } else { // DD-MM-YYYY
+                } else {
                     ano = partes[2];
                     mes = parseInt(partes[1], 10) - 1;
                 }
             } else if (dataStr.includes('/')) {
                 const partes = dataStr.split('/');
-                if (partes.length === 3) { // DD/MM/YYYY
+                if (partes.length === 3) {
                     ano = partes[2];
                     mes = parseInt(partes[1], 10) - 1;
-                } else if (partes.length === 2) { // MM/YYYY
+                } else if (partes.length === 2) {
                     ano = partes[1];
                     mes = parseInt(partes[0], 10) - 1;
                 }
@@ -617,7 +616,38 @@
 
             return dataStr;
         }
-        // Função para calcular o zoom (viewBox) com base no polígono lido
+
+        // Função para converter pontos ou blocos POLY em comandos d do <path> SVG (M... Z M... Z)
+        function converterPolyParaPathData(mapaStr) {
+            if (!mapaStr) return { pathData: "", todosPontos: "" };
+
+            // Trata se houver múltiplos POLY: ou coordenadas brutas
+            const blocos = mapaStr.split(/POLY:/i).filter(b => b.trim().length > 0);
+            let pathD = "";
+            let todosPontos = [];
+
+            blocos.forEach(bloco => {
+                const pares = bloco.trim().split(/\s+/);
+                if (pares.length >= 3) {
+                    const coordsValidas = [];
+                    pares.forEach((par, idx) => {
+                        const [x, y] = par.split(',');
+                        if (x !== undefined && y !== undefined && !isNaN(x) && !isNaN(y)) {
+                            coordsValidas.push(`${x},${y}`);
+                            todosPontos.push(`${x},${y}`);
+                        }
+                    });
+
+                    if (coordsValidas.length >= 3) {
+                        pathD += `M ${coordsValidas.join(' L ')} Z `;
+                    }
+                }
+            });
+
+            return { pathData: pathD.trim(), todosPontos: todosPontos.join(' ') };
+        }
+
+        // Função para calcular o zoom (viewBox) considerando todos os pontos de todas as partes
         function calcularZoom(pontos) {
             if (!pontos) return "0 0 1000 1000";
             
@@ -640,25 +670,20 @@
         
             if (minX === Infinity) return "0 0 1000 1000";
         
-            // Ponto central do talhão
             const centroX = (minX + maxX) / 2;
             const centroY = (minY + maxY) / 2;
         
-            // Tamanho do talhão
             const w = maxX - minX;
             const h = maxY - minY;
         
-            // Obtém a proporção real da div #mapContainer na tela do telemóvel
             const container = document.getElementById('mapContainer');
             const larguraContainer = container.clientWidth || 320;
             const alturaContainer = container.clientHeight || 220;
             const proporcaoTela = larguraContainer / alturaContainer;
         
-            // Determina o tamanho da janela de zoom com margem (padding)
-            let zoomW = w * 2;
-            let zoomH = h * 2;
+            let zoomW = w * 1.5;
+            let zoomH = h * 1.5;
         
-            // Garante que a janela de zoom tenha a mesma proporção da tela do celular
             if (zoomW / zoomH > proporcaoTela) {
                 zoomH = zoomW / proporcaoTela;
             } else {
@@ -670,18 +695,20 @@
         
             return `${startX} ${startY} ${zoomW} ${zoomH}`;
         }
+
         function obterCaminhoImagemFazenda(nomeFazenda) {
             if (!nomeFazenda || nomeFazenda === '-') return './Mapas/padrao.png';
             
             const slug = nomeFazenda
                 .toLowerCase()
-                .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Remove acentos
-                .replace(/[^a-z0-9]/g, "-")                     // Substitui espaços e símbolos por hífen
-                .replace(/-+/g, "-")                            // Remove hífens duplicados
-                .replace(/^-|-$/g, "");                         // Remove hífens nas pontas
+                .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+                .replace(/[^a-z0-9]/g, "-")
+                .replace(/-+/g, "-")
+                .replace(/^-|-$/g, "");
 
             return `./Mapas/${slug}.png`;
         }
+
         function carregarDados(exibirToastNotif = true) {
             let hash = window.location.hash.substring(1);
             if (!hash) {
@@ -693,7 +720,7 @@
         
             const btnMapa = document.getElementById('m');
             const mapContainer = document.getElementById('mapContainer');
-            const polygon = document.getElementById('polygonTalhao');
+            const pathElem = document.getElementById('polygonTalhao');
                     
             let dadosDecodificados;
             try {
@@ -704,9 +731,9 @@
         
             const [fazenda, talhao, area, especie, plantio, mapa] = dadosDecodificados.split('|');
             const bgImg = document.getElementById('bgFazendaImage');
-                if (bgImg) {
-                    bgImg.setAttribute('href', obterCaminhoImagemFazenda(fazenda));
-                }
+            if (bgImg) {
+                bgImg.setAttribute('href', obterCaminhoImagemFazenda(fazenda));
+            }
 
             if (!hash) {
                 document.getElementById('f').textContent = '-';
@@ -718,9 +745,10 @@
                 btnMapa.classList.add('disabled');
                 btnMapa.textContent = i18n[currentLang].btnMapShow;
                 mapContainer.style.display = 'none';
-                polygon.setAttribute('points', '');
+                pathElem.setAttribute('d', '');
                 return;
             }
+
             let areaFormatada = area;
             if (area) {
                 if (currentLang === 'pt') {
@@ -736,24 +764,21 @@
             document.getElementById('e').textContent = especie || '-';
             document.getElementById('p').textContent = formatarDataPlantio(plantio);
             
-            
-            // Lógica do SVG Map atualizada
             mapContainer.style.display = 'none';
             const svgElement = document.getElementById('talhaoSvg');
 
-            if (mapa && mapa.startsWith('POLY:')) {
-                const pontos = mapa.replace('POLY:', '').trim();
-                polygon.setAttribute('points', pontos);
+            if (mapa && mapa.includes('POLY:')) {
+                const { pathData, todosPontos } = converterPolyParaPathData(mapa);
+                pathElem.setAttribute('d', pathData);
                 
-                // Aplica o zoom dinâmico centrado no talhão
-                const viewBoxZoom = calcularZoom(pontos);
+                const viewBoxZoom = calcularZoom(todosPontos);
                 svgElement.setAttribute('viewBox', viewBoxZoom);
                 
                 btnMapa.classList.remove('disabled');
                 btnMapa.textContent = i18n[currentLang].btnMapShow;
             } else {
-                polygon.setAttribute('points', '');
-                svgElement.setAttribute('viewBox', '0 0 1000 1000'); // Reseta o zoom
+                pathElem.setAttribute('d', '');
+                svgElement.setAttribute('viewBox', '0 0 1000 1000');
                 btnMapa.classList.add('disabled');
                 btnMapa.textContent = i18n[currentLang].btnMapShow;
             }
@@ -885,7 +910,6 @@
             verificarStatusApp();
             carregarInfoDoSW();
 
-            // Adicionado evento de clique para alternar o mapa
             document.getElementById('m').addEventListener('click', (e) => {
                 e.preventDefault();
                 const mapContainer = document.getElementById('mapContainer');
