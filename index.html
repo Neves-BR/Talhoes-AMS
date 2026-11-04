@@ -10,7 +10,8 @@
     <style>
         html,
         body {
-            overscroll-behavior-y: contain;
+            /* Removido overscroll-behavior-y para permitir rolagem fluida */
+            scroll-behavior: smooth;
         }
 
         body {
@@ -18,7 +19,7 @@
             background: #f4f6f8;
             margin: 0;
             padding: 20px;
-            padding-bottom: 50px;
+            padding-bottom: 80px;
         }
 
         .lang-switch {
@@ -335,7 +336,6 @@
             <svg id="talhaoSvg" width="100%" height="100%" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet">
                 <image id="bgFazendaImage" href="./Mapas/padrao.png" x="0" y="0" width="1000" height="1000"
                     preserveAspectRatio="none" />
-                <!-- Alterado de <polygon> para <path> para aceitar múltiplas partes/geometrias independentes sem linhas entre elas -->
                 <path id="polygonTalhao" d="" fill="#2e7d32" fill-opacity="0.55" stroke="#ffffff" stroke-width="2.5"
                     fill-rule="nonzero" />
             </svg>
@@ -628,11 +628,9 @@
             return dataStr;
         }
 
-        // Função para converter pontos ou blocos POLY em comandos d do <path> SVG (M... Z M... Z)
         function converterPolyParaPathData(mapaStr) {
             if (!mapaStr) return { pathData: "", todosPontos: "" };
 
-            // Trata se houver múltiplos POLY: ou coordenadas brutas
             const blocos = mapaStr.split(/POLY:/i).filter(b => b.trim().length > 0);
             let pathD = "";
             let todosPontos = [];
@@ -658,7 +656,6 @@
             return { pathData: pathD.trim(), todosPontos: todosPontos.join(' ') };
         }
 
-        // Função para calcular o zoom (viewBox) considerando todos os pontos de todas as partes
         function calcularZoom(pontos) {
             if (!pontos) return "0 0 1000 1000";
 
@@ -836,11 +833,24 @@
         let html5QrCode = null;
         let isScanning = false;
 
+        function rolarAteOFinal() {
+            // Executa após a câmara renderizar totalmente
+            setTimeout(() => {
+                const readerContainer = document.getElementById('reader-container');
+                if (readerContainer) {
+                    readerContainer.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                }
+            }, 300);
+        }
+
         async function iniciarCameraDirect() {
             const readerElem = document.getElementById('reader');
             if (readerElem) {
                 readerElem.style.display = 'block';
             }
+
+            // Garante que rola imediatamente para dar espaço de renderização
+            rolarAteOFinal();
 
             if (!html5QrCode) {
                 html5QrCode = new Html5Qrcode("reader");
@@ -873,18 +883,6 @@
             };
             const config = { fps: 10, qrbox: { width: 220, height: 220 } };
 
-            const rolarAteOFinal = () => {
-                setTimeout(() => {
-                    window.scrollTo({
-                        top: document.documentElement.scrollHeight || document.body.scrollHeight,
-                        behavior: 'smooth'
-                    });
-                    if (readerElem) {
-                        readerElem.scrollIntoView({ behavior: 'smooth', block: 'end' });
-                    }
-                }, 150);
-            };
-
             try {
                 await html5QrCode.start(
                     { facingMode: { exact: "environment" } },
@@ -915,6 +913,7 @@
                 }
             }
         }
+
         async function pararCamera() {
             if (html5QrCode && isScanning) {
                 try {
@@ -925,16 +924,16 @@
                 isScanning = false;
                 document.getElementById('btnToggleCamera').textContent = i18n[currentLang].btnCamOpen;
 
-                // Oculta novamente a área do leitor
                 const readerElem = document.getElementById('reader');
                 if (readerElem) {
                     readerElem.style.display = 'none';
                 }
 
-                // Sobe suavemente até o topo da página
+                // Sobe suavemente até ao topo
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         }
+
         document.getElementById('btnToggleCamera').addEventListener('click', () => {
             if (isScanning) {
                 pararCamera();
@@ -968,6 +967,7 @@
                 }
             });
         });
+
         window.addEventListener('hashchange', () => carregarDados(true));
 
         window.addEventListener('visibilitychange', () => {
