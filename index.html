@@ -827,14 +827,13 @@
         let isScanning = false;
 
         async function iniciarCameraDirect() {
-            if (!html5QrCode) {
-                html5QrCode = new Html5Qrcode("reader");
-            }
-        
-            // Exibe o container da câmera antes de iniciar a captura
             const readerElem = document.getElementById('reader');
             if (readerElem) {
                 readerElem.style.display = 'block';
+            }
+        
+            if (!html5QrCode) {
+                html5QrCode = new Html5Qrcode("reader");
             }
         
             const qrCodeSuccessCallback = (decodedText) => {
@@ -873,7 +872,6 @@
                 isScanning = true;
                 document.getElementById('btnToggleCamera').textContent = i18n[currentLang].btnCamClose;
                 
-                // Foca a tela na câmera
                 if (readerElem) {
                     readerElem.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
@@ -887,39 +885,16 @@
                     isScanning = true;
                     document.getElementById('btnToggleCamera').textContent = i18n[currentLang].btnCamClose;
                     
-                    // Foca a tela na câmera (fallback)
                     if (readerElem) {
                         readerElem.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
                 } catch (fallbackErr) {
                     console.error("Erro na câmera:", fallbackErr);
-                    // Oculta novamente se falhar a abertura
                     if (readerElem) {
                         readerElem.style.display = 'none';
                     }
                     exibirToast(i18n[currentLang].toastCamError, 'error');
                 }
-            }
-        }
-        
-        async function pararCamera() {
-            if (html5QrCode && isScanning) {
-                try {
-                    await html5QrCode.stop();
-                } catch (e) {
-                    console.log("Erro ao desligar a câmera:", e);
-                }
-                isScanning = false;
-                document.getElementById('btnToggleCamera').textContent = i18n[currentLang].btnCamOpen;
-        
-                // Oculta novamente a área do leitor
-                const readerElem = document.getElementById('reader');
-                if (readerElem) {
-                    readerElem.style.display = 'none';
-                }
-        
-                // Sobe suavemente até o topo
-                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         }
 
