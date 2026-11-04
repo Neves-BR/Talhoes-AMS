@@ -11,7 +11,7 @@
         html,
         body {
             /* Removido overscroll-behavior-y para permitir rolagem fluida */
-            scroll-behavior: smooth;
+            scroll-behavior: auto;
         }
 
         body {
@@ -838,9 +838,9 @@
             setTimeout(() => {
                 const readerContainer = document.getElementById('reader-container');
                 if (readerContainer) {
-                    readerContainer.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                    readerContainer.scrollIntoView({ behavior: 'auto', block: 'end' });
                 }
-            }, 300);
+            }, 200);
         }
 
         async function iniciarCameraDirect() {
