@@ -897,7 +897,26 @@
                 }
             }
         }
-
+        async function pararCamera() {
+            if (html5QrCode && isScanning) {
+                try {
+                    await html5QrCode.stop();
+                } catch (e) {
+                    console.log("Erro ao desligar a câmera:", e);
+                }
+                isScanning = false;
+                document.getElementById('btnToggleCamera').textContent = i18n[currentLang].btnCamOpen;
+        
+                // Oculta novamente a área do leitor
+                const readerElem = document.getElementById('reader');
+                if (readerElem) {
+                    readerElem.style.display = 'none';
+                }
+        
+                // Sobe suavemente até o topo da página
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
         document.getElementById('btnToggleCamera').addEventListener('click', () => {
             if (isScanning) {
                 pararCamera();
