@@ -8,9 +8,11 @@
     <link id="manifestLink" rel="manifest" href="manifest.json">
     <title>Informações de campo - Tucano Florestal</title>
     <style>
-        html, body {
+        html,
+        body {
             overscroll-behavior-y: contain;
         }
+
         body {
             font-family: system-ui, -apple-system, sans-serif;
             background: #f4f6f8;
@@ -314,20 +316,28 @@
         </div>
 
         <h2 data-i18n="appTitle">Informações de campo - Tucano Florestal</h2>
-        
-        <div class="item"><span class="label" data-i18n="lblFazenda">Fazenda</span><span class="value" id="f">-</span></div>
-        <div class="item"><span class="label" data-i18n="lblTalhao">Talhão</span><span class="value" id="t">-</span></div>
-        <div class="item"><span class="label" data-i18n="lblArea">Área do Talhão</span><span class="value" id="a">-</span></div>
-        <div class="item"><span class="label" data-i18n="lblEspecie">Espécie</span><span class="value" id="e">-</span></div>
-        <div class="item"><span class="label" data-i18n="lblPlantio">Data de Plantio</span><span class="value" id="p">-</span></div>
+
+        <div class="item"><span class="label" data-i18n="lblFazenda">Fazenda</span><span class="value" id="f">-</span>
+        </div>
+        <div class="item"><span class="label" data-i18n="lblTalhao">Talhão</span><span class="value" id="t">-</span>
+        </div>
+        <div class="item"><span class="label" data-i18n="lblArea">Área do Talhão</span><span class="value"
+                id="a">-</span></div>
+        <div class="item"><span class="label" data-i18n="lblEspecie">Espécie</span><span class="value" id="e">-</span>
+        </div>
+        <div class="item"><span class="label" data-i18n="lblPlantio">Data de Plantio</span><span class="value"
+                id="p">-</span></div>
 
         <button id="m" class="btn disabled" data-i18n="btnMapShow">Visualizar Mapa</button>
 
-        <div id="mapContainer" style="display: none; margin-top: 15px; width: 100%; height: 220px; background: #111; border: 1px solid #c8e6c9; border-radius: 8px; box-sizing: border-box; overflow: hidden; text-align: center; position: relative;">
+        <div id="mapContainer"
+            style="display: none; margin-top: 15px; width: 100%; height: 220px; background: #111; border: 1px solid #c8e6c9; border-radius: 8px; box-sizing: border-box; overflow: hidden; text-align: center; position: relative;">
             <svg id="talhaoSvg" width="100%" height="100%" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet">
-                <image id="bgFazendaImage" href="./Mapas/padrao.png" x="0" y="0" width="1000" height="1000" preserveAspectRatio="none" />
+                <image id="bgFazendaImage" href="./Mapas/padrao.png" x="0" y="0" width="1000" height="1000"
+                    preserveAspectRatio="none" />
                 <!-- Alterado de <polygon> para <path> para aceitar múltiplas partes/geometrias independentes sem linhas entre elas -->
-                <path id="polygonTalhao" d="" fill="#2e7d32" fill-opacity="0.55" stroke="#ffffff" stroke-width="2.5" fill-rule="nonzero" />
+                <path id="polygonTalhao" d="" fill="#2e7d32" fill-opacity="0.55" stroke="#ffffff" stroke-width="2.5"
+                    fill-rule="nonzero" />
             </svg>
         </div>
 
@@ -521,15 +531,15 @@
 
             clearTimeout(toastTimeout);
             toast.textContent = mensagem;
-            toast.className = `toast toast-${tipo} show`; 
-            toastTimeout = setTimeout(() => { toast.classList.remove('show'); }, 3500); 
-        } 
+            toast.className = `toast toast-${tipo} show`;
+            toastTimeout = setTimeout(() => { toast.classList.remove('show'); }, 3500);
+        }
 
-        function tentarAbrirAppEVerificarConexao(dados) { 
-            if (!dados) return; 
+        function tentarAbrirAppEVerificarConexao(dados) {
+            if (!dados) return;
             const schemeApp = `meuleitor://scan?dados=${encodeURIComponent(dados)}`;
             let mudouDeTela = false;
-            
+
             const onBlur = () => { mudouDeTela = true; };
             window.addEventListener('blur', onBlur);
 
@@ -537,7 +547,7 @@
 
             setTimeout(() => {
                 window.removeEventListener('blur', onBlur);
-                
+
                 if (!mudouDeTela) {
                     if (navigator.onLine) {
                         document.body.classList.remove('is-standalone');
@@ -553,7 +563,7 @@
             const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
                 window.navigator.standalone ||
                 document.referrer.includes('android-app://');
-        
+
             let dadosStr = window.location.hash.substring(1);
             if (!dadosStr) {
                 const params = new URLSearchParams(window.location.search);
@@ -561,19 +571,19 @@
                     dadosStr = params.get('dados');
                 }
             }
-        
+
             if (isStandalone) {
                 document.body.classList.add('is-standalone');
                 carregarDados(!!dadosStr);
             } else {
                 document.body.classList.remove('is-standalone');
-        
+
                 if (dadosStr && navigator.onLine) {
                     tentarAbrirAppEVerificarConexao(dadosStr);
                 } else if (!navigator.onLine && dadosStr) {
                     exibirToast(i18n[currentLang].toastNoInternet, 'error');
                 }
-        
+
                 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
                 if (isIOS) {
                     document.getElementById('iosInstructions').style.display = 'block';
@@ -581,7 +591,7 @@
                 }
             }
         }
-        
+
         function formatarDataPlantio(dataStr) {
             if (!dataStr || dataStr === '-') return '-';
 
@@ -611,7 +621,7 @@
                 const anoCurto = ano.length === 4 ? ano.slice(-2) : ano;
                 const date = new Date(2000, mes, 1);
                 const mesAbrev = date.toLocaleString(currentLang === 'pt' ? 'pt-BR' : 'en-US', { month: 'short' }).replace('.', '');
-                
+
                 return `${mesAbrev.toLowerCase()}/${anoCurto}`;
             }
 
@@ -651,10 +661,10 @@
         // Função para calcular o zoom (viewBox) considerando todos os pontos de todas as partes
         function calcularZoom(pontos) {
             if (!pontos) return "0 0 1000 1000";
-            
+
             const pares = pontos.trim().split(/\s+/);
             let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-            
+
             pares.forEach(par => {
                 const coords = par.split(',');
                 if (coords.length === 2) {
@@ -668,38 +678,38 @@
                     }
                 }
             });
-        
+
             if (minX === Infinity) return "0 0 1000 1000";
-        
+
             const centroX = (minX + maxX) / 2;
             const centroY = (minY + maxY) / 2;
-        
+
             const w = maxX - minX;
             const h = maxY - minY;
-        
+
             const container = document.getElementById('mapContainer');
             const larguraContainer = container.clientWidth || 320;
             const alturaContainer = container.clientHeight || 220;
             const proporcaoTela = larguraContainer / alturaContainer;
-        
+
             let zoomW = w * 1.5;
             let zoomH = h * 1.5;
-        
+
             if (zoomW / zoomH > proporcaoTela) {
                 zoomH = zoomW / proporcaoTela;
             } else {
                 zoomW = zoomH * proporcaoTela;
             }
-        
+
             const startX = centroX - (zoomW / 2);
             const startY = centroY - (zoomH / 2);
-        
+
             return `${startX} ${startY} ${zoomW} ${zoomH}`;
         }
 
         function obterCaminhoImagemFazenda(nomeFazenda) {
             if (!nomeFazenda || nomeFazenda === '-') return './Mapas/padrao.png';
-            
+
             const slug = nomeFazenda
                 .toLowerCase()
                 .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -718,18 +728,18 @@
                     hash = params.get('dados');
                 }
             }
-        
+
             const btnMapa = document.getElementById('m');
             const mapContainer = document.getElementById('mapContainer');
             const pathElem = document.getElementById('polygonTalhao');
-                    
+
             let dadosDecodificados;
             try {
                 dadosDecodificados = decodeURIComponent(hash);
             } catch (e) {
                 dadosDecodificados = hash;
             }
-        
+
             const [fazenda, talhao, area, especie, plantio, mapa] = dadosDecodificados.split('|');
             const bgImg = document.getElementById('bgFazendaImage');
             if (bgImg) {
@@ -742,7 +752,7 @@
                 document.getElementById('a').textContent = '-';
                 document.getElementById('e').textContent = '-';
                 document.getElementById('p').textContent = '-';
-                
+
                 btnMapa.classList.add('disabled');
                 btnMapa.textContent = i18n[currentLang].btnMapShow;
                 mapContainer.style.display = 'none';
@@ -753,28 +763,28 @@
             let areaFormatada = area;
             if (area) {
                 if (currentLang === 'pt') {
-                    areaFormatada = area.replace('.', ','); 
+                    areaFormatada = area.replace('.', ',');
                 } else {
-                    areaFormatada = area.replace(',', '.'); 
+                    areaFormatada = area.replace(',', '.');
                 }
             }
-        
+
             document.getElementById('f').textContent = fazenda || '-';
             document.getElementById('t').textContent = talhao || '-';
             document.getElementById('a').textContent = areaFormatada ? `${areaFormatada}${i18n[currentLang].unitHa}` : '-';
             document.getElementById('e').textContent = especie || '-';
             document.getElementById('p').textContent = formatarDataPlantio(plantio);
-            
+
             mapContainer.style.display = 'none';
             const svgElement = document.getElementById('talhaoSvg');
 
             if (mapa && mapa.includes('POLY:')) {
                 const { pathData, todosPontos } = converterPolyParaPathData(mapa);
                 pathElem.setAttribute('d', pathData);
-                
+
                 const viewBoxZoom = calcularZoom(todosPontos);
                 svgElement.setAttribute('viewBox', viewBoxZoom);
-                
+
                 btnMapa.classList.remove('disabled');
                 btnMapa.textContent = i18n[currentLang].btnMapShow;
             } else {
@@ -831,14 +841,14 @@
             if (readerElem) {
                 readerElem.style.display = 'block';
             }
-        
+
             if (!html5QrCode) {
                 html5QrCode = new Html5Qrcode("reader");
             }
-        
+
             const qrCodeSuccessCallback = (decodedText) => {
                 let conteudo = decodedText;
-        
+
                 if (decodedText.includes('dados=')) {
                     try {
                         const urlObj = new URL(decodedText);
@@ -846,13 +856,13 @@
                     } catch (e) {
                         conteudo = decodedText.split('dados=')[1] || decodedText;
                     }
-                } 
+                }
                 else if (decodedText.includes('#')) {
                     conteudo = decodedText.split('#')[1];
                 }
-        
+
                 conteudo = decodeURIComponent(conteudo).replace(/^#/, '');
-        
+
                 if (conteudo.includes('|')) {
                     window.location.hash = conteudo;
                     carregarDados(true);
@@ -862,7 +872,7 @@
                 }
             };
             const config = { fps: 10, qrbox: { width: 220, height: 220 } };
-        
+
             try {
                 await html5QrCode.start(
                     { facingMode: { exact: "environment" } },
@@ -871,9 +881,9 @@
                 );
                 isScanning = true;
                 document.getElementById('btnToggleCamera').textContent = i18n[currentLang].btnCamClose;
-                
+
                 if (readerElem) {
-                    readerElem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    readerElem.scrollIntoView({ behavior: 'smooth', block: 'end' });
                 }
             } catch (err) {
                 try {
@@ -884,9 +894,9 @@
                     );
                     isScanning = true;
                     document.getElementById('btnToggleCamera').textContent = i18n[currentLang].btnCamClose;
-                    
+
                     if (readerElem) {
-                        readerElem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        readerElem.scrollIntoView({ behavior: 'smooth', block: 'end' });
                     }
                 } catch (fallbackErr) {
                     console.error("Erro na câmera:", fallbackErr);
@@ -906,13 +916,13 @@
                 }
                 isScanning = false;
                 document.getElementById('btnToggleCamera').textContent = i18n[currentLang].btnCamOpen;
-        
+
                 // Oculta novamente a área do leitor
                 const readerElem = document.getElementById('reader');
                 if (readerElem) {
                     readerElem.style.display = 'none';
                 }
-        
+
                 // Sobe suavemente até o topo da página
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
@@ -929,7 +939,7 @@
             if (window.location.hash || window.location.search) {
                 history.replaceState(null, "", window.location.pathname);
             }
-        
+
             alterarIdioma(currentLang);
             verificarStatusApp();
             carregarInfoDoSW();
