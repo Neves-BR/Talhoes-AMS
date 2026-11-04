@@ -873,6 +873,18 @@
             };
             const config = { fps: 10, qrbox: { width: 220, height: 220 } };
 
+            const rolarAteOFinal = () => {
+                setTimeout(() => {
+                    window.scrollTo({
+                        top: document.documentElement.scrollHeight || document.body.scrollHeight,
+                        behavior: 'smooth'
+                    });
+                    if (readerElem) {
+                        readerElem.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                    }
+                }, 150);
+            };
+
             try {
                 await html5QrCode.start(
                     { facingMode: { exact: "environment" } },
@@ -882,9 +894,7 @@
                 isScanning = true;
                 document.getElementById('btnToggleCamera').textContent = i18n[currentLang].btnCamClose;
 
-                if (readerElem) {
-                    readerElem.scrollIntoView({ behavior: 'smooth', block: 'end' });
-                }
+                rolarAteOFinal();
             } catch (err) {
                 try {
                     await html5QrCode.start(
@@ -895,9 +905,7 @@
                     isScanning = true;
                     document.getElementById('btnToggleCamera').textContent = i18n[currentLang].btnCamClose;
 
-                    if (readerElem) {
-                        readerElem.scrollIntoView({ behavior: 'smooth', block: 'end' });
-                    }
+                    rolarAteOFinal();
                 } catch (fallbackErr) {
                     console.error("Erro na câmera:", fallbackErr);
                     if (readerElem) {
