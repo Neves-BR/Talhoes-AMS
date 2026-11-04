@@ -3,7 +3,6 @@
 
 <head>
     <meta charset="UTF-8">
-    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="./Tucano-mini.png">
     <link id="manifestLink" rel="manifest" href="manifest.json">
@@ -866,6 +865,12 @@
                 );
                 isScanning = true;
                 document.getElementById('btnToggleCamera').textContent = i18n[currentLang].btnCamClose;
+                
+                // Foca a tela na área da câmera de forma suave
+                const readerElem = document.getElementById('reader');
+                if (readerElem) {
+                    readerElem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
             } catch (err) {
                 try {
                     await html5QrCode.start(
@@ -875,6 +880,12 @@
                     );
                     isScanning = true;
                     document.getElementById('btnToggleCamera').textContent = i18n[currentLang].btnCamClose;
+                    
+                    // Foca a tela na área da câmera de forma suave (fallback)
+                    const readerElem = document.getElementById('reader');
+                    if (readerElem) {
+                        readerElem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
                 } catch (fallbackErr) {
                     console.error("Erro na câmera:", fallbackErr);
                     exibirToast(i18n[currentLang].toastCamError, 'error');
@@ -891,6 +902,9 @@
                 }
                 isScanning = false;
                 document.getElementById('btnToggleCamera').textContent = i18n[currentLang].btnCamOpen;
+
+                // Sobe suavemente a página até o topo ao fechar a câmera
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         }
 
