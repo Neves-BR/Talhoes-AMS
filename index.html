@@ -830,10 +830,16 @@
             if (!html5QrCode) {
                 html5QrCode = new Html5Qrcode("reader");
             }
-
+        
+            // Exibe o container da câmera antes de iniciar a captura
+            const readerElem = document.getElementById('reader');
+            if (readerElem) {
+                readerElem.style.display = 'block';
+            }
+        
             const qrCodeSuccessCallback = (decodedText) => {
                 let conteudo = decodedText;
-
+        
                 if (decodedText.includes('dados=')) {
                     try {
                         const urlObj = new URL(decodedText);
@@ -845,9 +851,9 @@
                 else if (decodedText.includes('#')) {
                     conteudo = decodedText.split('#')[1];
                 }
-
+        
                 conteudo = decodeURIComponent(conteudo).replace(/^#/, '');
-
+        
                 if (conteudo.includes('|')) {
                     window.location.hash = conteudo;
                     carregarDados(true);
@@ -857,7 +863,7 @@
                 }
             };
             const config = { fps: 10, qrbox: { width: 220, height: 220 } };
-
+        
             try {
                 await html5QrCode.start(
                     { facingMode: { exact: "environment" } },
@@ -867,8 +873,7 @@
                 isScanning = true;
                 document.getElementById('btnToggleCamera').textContent = i18n[currentLang].btnCamClose;
                 
-                // Foca a tela na área da câmera de forma suave
-                const readerElem = document.getElementById('reader');
+                // Foca a tela na câmera
                 if (readerElem) {
                     readerElem.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
@@ -882,18 +887,21 @@
                     isScanning = true;
                     document.getElementById('btnToggleCamera').textContent = i18n[currentLang].btnCamClose;
                     
-                    // Foca a tela na área da câmera de forma suave (fallback)
-                    const readerElem = document.getElementById('reader');
+                    // Foca a tela na câmera (fallback)
                     if (readerElem) {
                         readerElem.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
                 } catch (fallbackErr) {
                     console.error("Erro na câmera:", fallbackErr);
+                    // Oculta novamente se falhar a abertura
+                    if (readerElem) {
+                        readerElem.style.display = 'none';
+                    }
                     exibirToast(i18n[currentLang].toastCamError, 'error');
                 }
             }
         }
-
+        
         async function pararCamera() {
             if (html5QrCode && isScanning) {
                 try {
@@ -903,8 +911,14 @@
                 }
                 isScanning = false;
                 document.getElementById('btnToggleCamera').textContent = i18n[currentLang].btnCamOpen;
-
-                // Sobe suavemente a página até o topo ao fechar a câmera
+        
+                // Oculta novamente a área do leitor
+                const readerElem = document.getElementById('reader');
+                if (readerElem) {
+                    readerElem.style.display = 'none';
+                }
+        
+                // Sobe suavemente até o topo
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         }
