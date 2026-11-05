@@ -935,7 +935,6 @@
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         }
-
         document.getElementById('btnToggleCamera').addEventListener('click', () => {
             if (isScanning) {
                 pararCamera();
@@ -943,7 +942,33 @@
                 iniciarCameraDirect();
             }
         });
+        let intervaloAtualizacao = null;
 
+        function iniciarAutoAtualizacao(intervaloEmSegundos = 30) {
+            // Limpa qualquer temporizador anterior para evitar duplicidade
+            if (intervaloAtualizacao) {
+                clearInterval(intervaloAtualizacao);
+            }
+        
+            intervaloAtualizacao = setInterval(() => {
+                // Verifica se há dados carregados antes de atualizar
+                let hash = window.location.hash.substring(1);
+                if (hash) {
+                    console.log("Atualizando dados em segundo plano...");
+                    // Executa o carregamento mantendo os dados e atualizando sem toast ruidoso
+                    carregarDados(false);
+                }
+            }, intervaloEmSegundos * 1000);
+        }
+        
+        // Parar a atualização quando o app for para segundo plano (para economizar bateria)
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden) {
+                if (intervaloAtualizacao) clearInterval(intervaloAtualizacao);
+            } else {
+                iniciarAutoAtualizacao(30); // Reativa ao voltar para o app
+            }
+        });
         window.addEventListener('DOMContentLoaded', () => {
             if (window.location.hash || window.location.search) {
                 history.replaceState(null, "", window.location.pathname);
@@ -952,6 +977,7 @@
             alterarIdioma(currentLang);
             verificarStatusApp();
             carregarInfoDoSW();
+            iniciarAutoAtualizacao(30);
 
             document.getElementById('m').addEventListener('click', (e) => {
                 e.preventDefault();
