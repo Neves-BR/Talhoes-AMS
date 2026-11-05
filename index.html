@@ -774,7 +774,8 @@
             document.getElementById('e').textContent = especie || '-';
             document.getElementById('p').textContent = formatarDataPlantio(plantio);
 
-            mapContainer.style.display = 'none';
+            // MANTER O ESTADO ATUAL DO MAPA (Não força mais esconder se já estiver aberto)
+            const mapaEstavaVisivel = mapContainer.style.display === 'block';
             const svgElement = document.getElementById('talhaoSvg');
 
             if (mapa && mapa.includes('POLY:')) {
@@ -785,15 +786,20 @@
                 svgElement.setAttribute('viewBox', viewBoxZoom);
 
                 btnMapa.classList.remove('disabled');
-                btnMapa.textContent = i18n[currentLang].btnMapShow;
+                // Mantém o texto do botão de acordo com a visibilidade atual
+                btnMapa.textContent = mapaEstavaVisivel ? i18n[currentLang].btnMapHide : i18n[currentLang].btnMapShow;
             } else {
                 pathElem.setAttribute('d', '');
                 svgElement.setAttribute('viewBox', '0 0 1000 1000');
                 btnMapa.classList.add('disabled');
                 btnMapa.textContent = i18n[currentLang].btnMapShow;
+                mapContainer.style.display = 'none';
+            }
+
+            if (exibirToastNotif) {
+                exibirToast(i18n[currentLang].toastSuccess, 'success');
             }
         }
-
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('./sw.js')
                 .then(() => console.log('Service Worker ativo.'))
