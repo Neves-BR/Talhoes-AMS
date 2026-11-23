@@ -93,6 +93,16 @@
         .btn.disabled { background: #ccc; pointer-events: none; }
         .btn-install { background: #1565c0; font-size: 15px; }
 
+        #mapContainer {
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            cursor: grab;
+        }
+        #mapContainer:active {
+            cursor: grabbing;
+        }
+
         #reader-container { margin-top: 20px; border-top: 1px dashed #ccc; padding-top: 15px; }
         #reader { display: none; width: 100%; border-radius: 8px; overflow: hidden; background: #222; min-height: 200px; }
         #reader select, #reader button, #reader a { display: none !important; }
@@ -445,8 +455,77 @@
             return { pathData: pathD.trim(), todosPontos: todos.join(' ') };
         }
 
+        /* ============================================================
+           CONTROLE DE ZOOM E ARRASTE LIMITADO DO MAPA
+           ============================================================ */
+        let baseViewBox = { x: 0, y: 0, w: 1000, h: 1000 };
+        let currentViewBox = { x: 0, y: 0, w: 1000, h: 1000 };
+        let resetMapTimeout = null;
+        let resetAnimFrame = null;
+
+        function aplicarViewBox(vb) {
+            currentViewBox = { ...vb };
+            const svg = document.getElementById('talhaoSvg');
+            if (svg) {
+                svg.setAttribute('viewBox', `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
+            }
+        }
+
+        // Restringe o zoom (mínimo 1x, máximo 3x) e o deslocamento lateral
+        function limitarViewBox(vb) {
+            const minW = baseViewBox.w / 3; // Zoom máximo de 3x
+            const maxW = baseViewBox.w;     // Zoom mínimo (tamanho original)
+
+            let w = Math.max(minW, Math.min(maxW, vb.w));
+            let h = w * (baseViewBox.h / baseViewBox.w);
+
+            // Permite arrastar até 35% além da área enquadrada originalmente
+            const margemX = baseViewBox.w * 0.35;
+            const margemY = baseViewBox.h * 0.35;
+
+            const minX = baseViewBox.x - margemX;
+            const maxX = (baseViewBox.x + baseViewBox.w + margemX) - w;
+            const minY = baseViewBox.y - margemY;
+            const maxY = (baseViewBox.y + baseViewBox.h + margemY) - h;
+
+            let x = Math.max(minX, Math.min(maxX, vb.x));
+            let y = Math.max(minY, Math.min(maxY, vb.y));
+
+            return { x, y, w, h };
+        }
+
+        // Agenda o retorno suave para a posição original após 2 segundos ao soltar
+        function agendarRetornoMapa() {
+            clearTimeout(resetMapTimeout);
+            cancelAnimationFrame(resetAnimFrame);
+
+            resetMapTimeout = setTimeout(() => {
+                const inicio = { ...currentViewBox };
+                const destino = { ...baseViewBox };
+                const duracao = 350;
+                const startTime = performance.now();
+
+                function animarRetorno(now) {
+                    const progresso = Math.min((now - startTime) / duracao, 1);
+                    const ease = 1 - Math.pow(1 - progresso, 3);
+
+                    aplicarViewBox({
+                        x: inicio.x + (destino.x - inicio.x) * ease,
+                        y: inicio.y + (destino.y - inicio.y) * ease,
+                        w: inicio.w + (destino.w - inicio.w) * ease,
+                        h: inicio.h + (destino.h - inicio.h) * ease
+                    });
+
+                    if (progresso < 1) {
+                        resetAnimFrame = requestAnimationFrame(animarRetorno);
+                    }
+                }
+                resetAnimFrame = requestAnimationFrame(animarRetorno);
+            }, 2000);
+        }
+
         function calcularZoom(pontos) {
-            if (!pontos) return "0 0 1000 1000";
+            if (!pontos) return { x: 0, y: 0, w: 1000, h: 1000 };
 
             let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
             pontos.trim().split(/\s+/).forEach(par => {
@@ -460,7 +539,7 @@
                 }
             });
 
-            if (minX === Infinity) return "0 0 1000 1000";
+            if (minX === Infinity) return { x: 0, y: 0, w: 1000, h: 1000 };
 
             const centroX = (minX + maxX) / 2;
             const centroY = (minY + maxY) / 2;
@@ -474,7 +553,12 @@
             if (zoomW / zoomH > proporcaoTela) zoomH = zoomW / proporcaoTela;
             else zoomW = zoomH * proporcaoTela;
 
-            return `${centroX - zoomW / 2} ${centroY - zoomH / 2} ${zoomW} ${zoomH}`;
+            return {
+                x: centroX - zoomW / 2,
+                y: centroY - zoomH / 2,
+                w: zoomW,
+                h: zoomH
+            };
         }
 
         function limparCampos() {
@@ -506,7 +590,6 @@
             const btnMapa = document.getElementById('m');
             const mapContainer = document.getElementById('mapContainer');
             const pathElem = document.getElementById('polygonTalhao');
-            const svgElement = document.getElementById('talhaoSvg');
 
             document.getElementById('f').textContent = FAZENDA_FIXA;
             document.getElementById('t').textContent = talhao || '-';
@@ -520,18 +603,142 @@
             if (poligonos && poligonos.length) {
                 const { pathData, todosPontos } = montarPath(poligonos);
                 pathElem.setAttribute('d', pathData);
-                svgElement.setAttribute('viewBox', calcularZoom(todosPontos));
+                baseViewBox = calcularZoom(todosPontos);
+                aplicarViewBox(baseViewBox);
                 btnMapa.classList.remove('disabled');
                 btnMapa.textContent = mapaEstavaVisivel ? i18n[currentLang].btnMapHide : i18n[currentLang].btnMapShow;
             } else {
                 pathElem.setAttribute('d', '');
-                svgElement.setAttribute('viewBox', '0 0 1000 1000');
+                baseViewBox = { x: 0, y: 0, w: 1000, h: 1000 };
+                aplicarViewBox(baseViewBox);
                 btnMapa.classList.add('disabled');
                 btnMapa.textContent = i18n[currentLang].btnMapShow;
                 mapContainer.style.display = 'none';
             }
 
             if (exibirToastNotif) exibirToast(i18n[currentLang].toastSuccess, 'success');
+        }
+
+        function inicializarInteracaoMapa() {
+            const container = document.getElementById('mapContainer');
+            if (!container) return;
+
+            let isDragging = false;
+            let startClient = { x: 0, y: 0 };
+            let startVB = null;
+            let initialPinchDist = null;
+            let initialPinchVB = null;
+
+            const getDist = (t1, t2) => Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+
+            // Eventos Touch (Celular / Tablet)
+            container.addEventListener('touchstart', (e) => {
+                clearTimeout(resetMapTimeout);
+                cancelAnimationFrame(resetAnimFrame);
+
+                if (e.touches.length === 1) {
+                    isDragging = true;
+                    startClient = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                    startVB = { ...currentViewBox };
+                } else if (e.touches.length === 2) {
+                    isDragging = false;
+                    initialPinchDist = getDist(e.touches[0], e.touches[1]);
+                    initialPinchVB = { ...currentViewBox };
+                }
+            }, { passive: false });
+
+            container.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                const rect = container.getBoundingClientRect();
+
+                if (e.touches.length === 1 && isDragging && startVB) {
+                    const dx = (e.touches[0].clientX - startClient.x) * (startVB.w / rect.width);
+                    const dy = (e.touches[0].clientY - startClient.y) * (startVB.h / rect.height);
+                    aplicarViewBox(limitarViewBox({
+                        x: startVB.x - dx,
+                        y: startVB.y - dy,
+                        w: startVB.w,
+                        h: startVB.h
+                    }));
+                } else if (e.touches.length === 2 && initialPinchDist && initialPinchVB) {
+                    const distAtual = getDist(e.touches[0], e.touches[1]);
+                    const escala = initialPinchDist / distAtual;
+                    const novaW = initialPinchVB.w * escala;
+                    const novaH = initialPinchVB.h * escala;
+
+                    const centroX = initialPinchVB.x + initialPinchVB.w / 2;
+                    const centroY = initialPinchVB.y + initialPinchVB.h / 2;
+
+                    aplicarViewBox(limitarViewBox({
+                        x: centroX - novaW / 2,
+                        y: centroY - novaH / 2,
+                        w: novaW,
+                        h: novaH
+                    }));
+                }
+            }, { passive: false });
+
+            container.addEventListener('touchend', (e) => {
+                if (e.touches.length === 0) {
+                    isDragging = false;
+                    initialPinchDist = null;
+                    agendarRetornoMapa();
+                } else if (e.touches.length === 1) {
+                    isDragging = true;
+                    startClient = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                    startVB = { ...currentViewBox };
+                    initialPinchDist = null;
+                }
+            });
+
+            // Eventos Mouse (Desktop / Testes no navegador)
+            container.addEventListener('mousedown', (e) => {
+                clearTimeout(resetMapTimeout);
+                cancelAnimationFrame(resetAnimFrame);
+                isDragging = true;
+                startClient = { x: e.clientX, y: e.clientY };
+                startVB = { ...currentViewBox };
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!isDragging || !startVB) return;
+                const rect = container.getBoundingClientRect();
+                const dx = (e.clientX - startClient.x) * (startVB.w / rect.width);
+                const dy = (e.clientY - startClient.y) * (startVB.h / rect.height);
+                aplicarViewBox(limitarViewBox({
+                    x: startVB.x - dx,
+                    y: startVB.y - dy,
+                    w: startVB.w,
+                    h: startVB.h
+                }));
+            });
+
+            window.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    agendarRetornoMapa();
+                }
+            });
+
+            container.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                clearTimeout(resetMapTimeout);
+                cancelAnimationFrame(resetAnimFrame);
+
+                const fator = e.deltaY > 0 ? 1.15 : 0.85;
+                const novaW = currentViewBox.w * fator;
+                const novaH = currentViewBox.h * fator;
+                const centroX = currentViewBox.x + currentViewBox.w / 2;
+                const centroY = currentViewBox.y + currentViewBox.h / 2;
+
+                aplicarViewBox(limitarViewBox({
+                    x: centroX - novaW / 2,
+                    y: centroY - novaH / 2,
+                    w: novaW,
+                    h: novaH
+                }));
+                agendarRetornoMapa();
+            }, { passive: false });
         }
 
         if ('serviceWorker' in navigator) {
@@ -680,6 +887,7 @@
             verificarStatusApp();
             carregarInfoDoSW();
             iniciarAutoAtualizacao(30);
+            inicializarInteracaoMapa();
 
             document.getElementById('m').addEventListener('click', (e) => {
                 e.preventDefault();
@@ -710,4 +918,3 @@
 </body>
 
 </html>
-
