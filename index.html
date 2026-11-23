@@ -278,6 +278,7 @@
     </style>
     <script src="https://unpkg.com/html5-qrcode@2.3.8"></script>
     <base target="_blank">
+<base target="_blank">
 </head>
 
 <body>
@@ -320,7 +321,8 @@
 
         <h2 data-i18n="appTitle">Informações de campo - Tucano Florestal</h2>
 
-        <div class="item"><span class="label" data-i18n="lblFazenda">Fazenda</span><span class="value" id="f">-</span>
+        <div class="item" id="itemFazenda" style="display: none;"><span class="label"
+                data-i18n="lblFazenda">Fazenda</span><span class="value" id="f">-</span>
         </div>
         <div class="item"><span class="label" data-i18n="lblTalhao">Talhão</span><span class="value" id="t">-</span>
         </div>
@@ -330,18 +332,6 @@
         </div>
         <div class="item"><span class="label" data-i18n="lblPlantio">Data de Plantio</span><span class="value"
                 id="p">-</span></div>
-
-        <button id="m" class="btn disabled" data-i18n="btnMapShow">Visualizar Mapa</button>
-
-        <div id="mapContainer"
-            style="display: none; margin-top: 15px; width: 100%; height: 220px; background: #111; border: 1px solid #c8e6c9; border-radius: 8px; box-sizing: border-box; overflow: hidden; text-align: center; position: relative;">
-            <svg id="talhaoSvg" width="100%" height="100%" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet">
-                <image id="bgFazendaImage" href="./Mapas/padrao.png" x="0" y="0" width="1000" height="1000"
-                    preserveAspectRatio="none" />
-                <path id="polygonTalhao" d="" fill="#2e7d32" fill-opacity="0.55" stroke="#ffffff" stroke-width="1.5"
-                    fill-rule="nonzero" />
-            </svg>
-        </div>
 
         <div id="reader-container">
             <span class="label" style="margin-bottom: 8px;" data-i18n="lblScanner">Scanner QR Code</span>
@@ -356,6 +346,8 @@
     </div>
 
     <script>
+        const FAZENDA_FIXA = "América do Sul";
+
         const i18n = {
             pt: {
                 appName: "Informações de campo - Tucano Florestal",
@@ -374,8 +366,6 @@
                 lblArea: "Área do Talhão",
                 lblEspecie: "Espécie",
                 lblPlantio: "Data de Plantio",
-                btnMapShow: "Visualizar Mapa",
-                btnMapHide: "Ocultar Mapa",
                 lblScanner: "Scanner QR Code",
                 btnCamOpen: "Abrir Câmera Traseira",
                 btnCamClose: "Fechar Câmera",
@@ -404,8 +394,6 @@
                 lblArea: "Productive Area",
                 lblEspecie: "Specie",
                 lblPlantio: "Planting Date",
-                btnMapShow: "View Map",
-                btnMapHide: "Hide Map",
                 lblScanner: "QR Code Scanner",
                 btnCamOpen: "Open Rear Camera",
                 btnCamClose: "Close Camera",
@@ -509,18 +497,6 @@
             const btnCam = document.getElementById('btnToggleCamera');
             if (btnCam) {
                 btnCam.textContent = isScanning ? i18n[lang].btnCamClose : i18n[lang].btnCamOpen;
-            }
-
-            const btnMapa = document.getElementById('m');
-            const mapContainer = document.getElementById('mapContainer');
-            if (!btnMapa.classList.contains('disabled')) {
-                if (mapContainer.style.display === 'none') {
-                    btnMapa.textContent = i18n[currentLang].btnMapShow;
-                } else {
-                    btnMapa.textContent = i18n[currentLang].btnMapHide;
-                }
-            } else {
-                btnMapa.textContent = i18n[currentLang].btnMapShow;
             }
 
             carregarDados(false);
@@ -630,95 +606,6 @@
             return dataStr;
         }
 
-        function converterPolyParaPathData(mapaStr) {
-            if (!mapaStr) return { pathData: "", todosPontos: "" };
-
-            const blocos = mapaStr.split(/POLY:/i).filter(b => b.trim().length > 0);
-            let pathD = "";
-            let todosPontos = [];
-
-            blocos.forEach(bloco => {
-                const pares = bloco.trim().split(/\s+/);
-                if (pares.length >= 3) {
-                    const coordsValidas = [];
-                    pares.forEach((par, idx) => {
-                        const [x, y] = par.split(',');
-                        if (x !== undefined && y !== undefined && !isNaN(x) && !isNaN(y)) {
-                            coordsValidas.push(`${x},${y}`);
-                            todosPontos.push(`${x},${y}`);
-                        }
-                    });
-
-                    if (coordsValidas.length >= 3) {
-                        pathD += `M ${coordsValidas.join(' L ')} Z `;
-                    }
-                }
-            });
-
-            return { pathData: pathD.trim(), todosPontos: todosPontos.join(' ') };
-        }
-
-        function calcularZoom(pontos) {
-            if (!pontos) return "0 0 1000 1000";
-
-            const pares = pontos.trim().split(/\s+/);
-            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-
-            pares.forEach(par => {
-                const coords = par.split(',');
-                if (coords.length === 2) {
-                    const x = parseFloat(coords[0]);
-                    const y = parseFloat(coords[1]);
-                    if (!isNaN(x) && !isNaN(y)) {
-                        if (x < minX) minX = x;
-                        if (x > maxX) maxX = x;
-                        if (y < minY) minY = y;
-                        if (y > maxY) maxY = y;
-                    }
-                }
-            });
-
-            if (minX === Infinity) return "0 0 1000 1000";
-
-            const centroX = (minX + maxX) / 2;
-            const centroY = (minY + maxY) / 2;
-
-            const w = maxX - minX;
-            const h = maxY - minY;
-
-            const container = document.getElementById('mapContainer');
-            const larguraContainer = container.clientWidth || 320;
-            const alturaContainer = container.clientHeight || 220;
-            const proporcaoTela = larguraContainer / alturaContainer;
-
-            let zoomW = w * 1.6;
-            let zoomH = h * 1.6;
-
-            if (zoomW / zoomH > proporcaoTela) {
-                zoomH = zoomW / proporcaoTela;
-            } else {
-                zoomW = zoomH * proporcaoTela;
-            }
-
-            const startX = centroX - (zoomW / 2);
-            const startY = centroY - (zoomH / 2);
-
-            return `${startX} ${startY} ${zoomW} ${zoomH}`;
-        }
-
-        function obterCaminhoImagemFazenda(nomeFazenda) {
-            if (!nomeFazenda || nomeFazenda === '-') return './Mapas/padrao.png';
-
-            const slug = nomeFazenda
-                .toLowerCase()
-                .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-                .replace(/[^a-z0-9]/g, "-")
-                .replace(/-+/g, "-")
-                .replace(/^-|-$/g, "");
-
-            return `./Mapas/${slug}.png`;
-        }
-
         function carregarDados(exibirToastNotif = true) {
             let hash = window.location.hash.substring(1);
             if (!hash) {
@@ -728,9 +615,7 @@
                 }
             }
 
-            const btnMapa = document.getElementById('m');
-            const mapContainer = document.getElementById('mapContainer');
-            const pathElem = document.getElementById('polygonTalhao');
+            const itemFazenda = document.getElementById('itemFazenda');
 
             let dadosDecodificados;
             try {
@@ -740,24 +625,21 @@
             }
 
             const [fazenda, talhao, area, especie, plantio, mapa] = dadosDecodificados.split('|');
-            const bgImg = document.getElementById('bgFazendaImage');
-            if (bgImg) {
-                bgImg.setAttribute('href', obterCaminhoImagemFazenda(fazenda));
-            }
 
             if (!hash) {
+                // Sem dados (QR Code não lido): limpa tudo e oculta a Fazenda
                 document.getElementById('f').textContent = '-';
                 document.getElementById('t').textContent = '-';
                 document.getElementById('a').textContent = '-';
                 document.getElementById('e').textContent = '-';
                 document.getElementById('p').textContent = '-';
-
-                btnMapa.classList.add('disabled');
-                btnMapa.textContent = i18n[currentLang].btnMapShow;
-                mapContainer.style.display = 'none';
-                pathElem.setAttribute('d', '');
+                itemFazenda.style.display = 'none';
                 return;
             }
+
+            // Dados carregados: Fazenda fixa "América do Sul" passa a ser exibida
+            itemFazenda.style.display = 'block';
+            document.getElementById('f').textContent = FAZENDA_FIXA;
 
             let areaFormatada = area;
             if (area) {
@@ -768,33 +650,10 @@
                 }
             }
 
-            document.getElementById('f').textContent = fazenda || '-';
             document.getElementById('t').textContent = talhao || '-';
             document.getElementById('a').textContent = areaFormatada ? `${areaFormatada}${i18n[currentLang].unitHa}` : '-';
             document.getElementById('e').textContent = especie || '-';
             document.getElementById('p').textContent = formatarDataPlantio(plantio);
-
-            // MANTER O ESTADO ATUAL DO MAPA (Não força mais esconder se já estiver aberto)
-            const mapaEstavaVisivel = mapContainer.style.display === 'block';
-            const svgElement = document.getElementById('talhaoSvg');
-
-            if (mapa && mapa.includes('POLY:')) {
-                const { pathData, todosPontos } = converterPolyParaPathData(mapa);
-                pathElem.setAttribute('d', pathData);
-
-                const viewBoxZoom = calcularZoom(todosPontos);
-                svgElement.setAttribute('viewBox', viewBoxZoom);
-
-                btnMapa.classList.remove('disabled');
-                // Mantém o texto do botão de acordo com a visibilidade atual
-                btnMapa.textContent = mapaEstavaVisivel ? i18n[currentLang].btnMapHide : i18n[currentLang].btnMapShow;
-            } else {
-                pathElem.setAttribute('d', '');
-                svgElement.setAttribute('viewBox', '0 0 1000 1000');
-                btnMapa.classList.add('disabled');
-                btnMapa.textContent = i18n[currentLang].btnMapShow;
-                mapContainer.style.display = 'none';
-            }
 
             if (exibirToastNotif) {
                 exibirToast(i18n[currentLang].toastSuccess, 'success');
@@ -955,7 +814,7 @@
             if (intervaloAtualizacao) {
                 clearInterval(intervaloAtualizacao);
             }
-        
+
             intervaloAtualizacao = setInterval(() => {
                 // Verifica se há dados carregados antes de atualizar
                 let hash = window.location.hash.substring(1);
@@ -966,7 +825,7 @@
                 }
             }, intervaloEmSegundos * 1000);
         }
-        
+
         // Parar a atualização quando o app for para segundo plano (para economizar bateria)
         document.addEventListener("visibilitychange", () => {
             if (document.hidden) {
@@ -984,22 +843,6 @@
             verificarStatusApp();
             carregarInfoDoSW();
             iniciarAutoAtualizacao(30);
-
-            document.getElementById('m').addEventListener('click', (e) => {
-                e.preventDefault();
-                const mapContainer = document.getElementById('mapContainer');
-                const btnMapa = document.getElementById('m');
-
-                if (btnMapa.classList.contains('disabled')) return;
-
-                if (mapContainer.style.display === 'none' || mapContainer.style.display === '') {
-                    mapContainer.style.display = 'block';
-                    btnMapa.textContent = i18n[currentLang].btnMapHide;
-                } else {
-                    mapContainer.style.display = 'none';
-                    btnMapa.textContent = i18n[currentLang].btnMapShow;
-                }
-            });
         });
 
         window.addEventListener('hashchange', () => carregarDados(true));
