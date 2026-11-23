@@ -98,23 +98,6 @@
         #reader select, #reader button, #reader a { display: none !important; }
         .btn-scanner { background: #37474f; margin-bottom: 10px; }
 
-        /* Movimento limitado só da imagem de fundo (polígono fica parado) */
-        #bgFazendaImage {
-            transform-box: fill-box;
-            transform-origin: center;
-            animation: mapaDrift 14s ease-in-out infinite alternate;
-        }
-
-        @keyframes mapaDrift {
-            0%   { transform: scale(1.05) translate(-1.5%, -1%); }
-            50%  { transform: scale(1.07) translate(0.8%, 1.2%); }
-            100% { transform: scale(1.05) translate(1.5%, -0.6%); }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            #bgFazendaImage { animation: none; }
-        }
-
         .card-footer {
             margin-top: 20px; padding-top: 12px; border-top: 1px solid #eee;
             text-align: center; font-size: 12px; color: #777;
@@ -727,3 +710,4 @@
 </body>
 
 </html>
+
