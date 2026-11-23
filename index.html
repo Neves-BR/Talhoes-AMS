@@ -590,6 +590,10 @@
                     ano = partes[2];
                     mes = parseInt(partes[1], 10) - 1;
                 } else if (partes.length === 2) {
+                    // Formato MM/YYYY (ex.: 04/2027) -> exibir como está
+                    if (partes[1].length === 4) {
+                        return dataStr;
+                    }
                     ano = partes[1];
                     mes = parseInt(partes[0], 10) - 1;
                 }
@@ -606,6 +610,12 @@
             return dataStr;
         }
 
+        function exibirFazendaFixa() {
+            const itemFazenda = document.getElementById('itemFazenda');
+            itemFazenda.style.display = 'block';
+            document.getElementById('f').textContent = FAZENDA_FIXA; // valor sempre fixo
+        }
+
         function carregarDados(exibirToastNotif = true) {
             let hash = window.location.hash.substring(1);
             if (!hash) {
@@ -615,7 +625,7 @@
                 }
             }
 
-            const itemFazenda = document.getElementById('itemFazenda');
+            const itemFazenda = document.getElementById('itemFazenda'); // usado para ocultar quando sem dados
 
             let dadosDecodificados;
             try {
@@ -624,7 +634,19 @@
                 dadosDecodificados = hash;
             }
 
-            const [fazenda, talhao, area, especie, plantio, mapa] = dadosDecodificados.split('|');
+            // Formato do QR Code: TALHAO|AREA|ESPECIE|PLANTIO|LINK_PDF
+            // O link .pdf (5º campo) é recebido mas intencionalmente ignorado.
+            // Se houver um 6º campo (QR legado com POLY/mapa), ele também é ignorado.
+            const partes = dadosDecodificados.split('|');
+            let talhao, area, especie, plantio;
+
+            if (partes.length >= 6) {
+                // QR legado: FAZENDA|TALHAO|AREA|ESPECIE|PLANTIO|MAPA -> descarta a fazenda do QR
+                [, talhao, area, especie, plantio] = partes;
+            } else {
+                // QR atual: TALHAO|AREA|ESPECIE|PLANTIO[|LINK_PDF]
+                [talhao, area, especie, plantio] = partes;
+            }
 
             if (!hash) {
                 // Sem dados (QR Code não lido): limpa tudo e oculta a Fazenda
@@ -637,9 +659,9 @@
                 return;
             }
 
-            // Dados carregados: Fazenda fixa "América do Sul" passa a ser exibida
-            itemFazenda.style.display = 'block';
-            document.getElementById('f').textContent = FAZENDA_FIXA;
+            // Dados carregados: exibe a Fazenda com valor fixo "América do Sul",
+            // independente do conteúdo do QR Code
+            exibirFazendaFixa();
 
             let areaFormatada = area;
             if (area) {
