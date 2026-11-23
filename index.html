@@ -635,18 +635,9 @@
             }
 
             // Formato do QR Code: TALHAO|AREA|ESPECIE|PLANTIO|LINK_PDF
-            // O link .pdf (5º campo) é recebido mas intencionalmente ignorado.
-            // Se houver um 6º campo (QR legado com POLY/mapa), ele também é ignorado.
-            const partes = dadosDecodificados.split('|');
-            let talhao, area, especie, plantio;
-
-            if (partes.length >= 6) {
-                // QR legado: FAZENDA|TALHAO|AREA|ESPECIE|PLANTIO|MAPA -> descarta a fazenda do QR
-                [, talhao, area, especie, plantio] = partes;
-            } else {
-                // QR atual: TALHAO|AREA|ESPECIE|PLANTIO[|LINK_PDF]
-                [talhao, area, especie, plantio] = partes;
-            }
+            // Sempre lê os 4 primeiros campos na ordem fixa.
+            // O link .pdf (5º campo) e quaisquer campos extras são intencionalmente ignorados.
+            const [talhao, area, especie, plantio] = dadosDecodificados.split('|');
 
             if (!hash) {
                 // Sem dados (QR Code não lido): limpa tudo e oculta a Fazenda
