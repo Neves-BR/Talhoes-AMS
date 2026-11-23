@@ -479,14 +479,12 @@
             let w = Math.max(minW, Math.min(maxW, vb.w));
             let h = w * (baseViewBox.h / baseViewBox.w);
 
-            // Permite arrastar até 35% além da área enquadrada originalmente
-            const margemX = baseViewBox.w * 0.35;
-            const margemY = baseViewBox.h * 0.35;
-
-            const minX = baseViewBox.x - margemX;
-            const maxX = (baseViewBox.x + baseViewBox.w + margemX) - w;
-            const minY = baseViewBox.y - margemY;
-            const maxY = (baseViewBox.y + baseViewBox.h + margemY) - h;
+            // Trava o arraste nos limites exatos da imagem de fundo (0 a 1000)
+            // sem cortar o enquadramento inicial caso o talhão esteja na borda
+            const minX = Math.min(0, baseViewBox.x);
+            const maxX = Math.max(1000, baseViewBox.x + baseViewBox.w) - w;
+            const minY = Math.min(0, baseViewBox.y);
+            const maxY = Math.max(1000, baseViewBox.y + baseViewBox.h) - h;
 
             let x = Math.max(minX, Math.min(maxX, vb.x));
             let y = Math.max(minY, Math.min(maxY, vb.y));
@@ -918,3 +916,4 @@
 </body>
 
 </html>
+
