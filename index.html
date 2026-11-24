@@ -344,6 +344,7 @@
         const BLINK_DURACAO_MS = 150;                   // tempo com o olho fechado
         const BLINK_AUTO_MIN_MS = 6000;                 // intervalo mínimo entre piscadas automáticas
         const BLINK_AUTO_MAX_MS = 16000;                // intervalo máximo entre piscadas automáticas
+        const EASTER_EGG_FOUND_KEY = 'easterEggFound';  // Chave para o localStorage
 
         function iniciarBlinkLogo() {
             const logos = document.querySelectorAll('.logo-tucano');
@@ -377,6 +378,10 @@
 
             async function piscar(duplo = false) {
                 if (!pronto || piscando) return;
+                
+                // --- NOVO: Marca o Easter egg como encontrado ---
+                try { localStorage.setItem(EASTER_EGG_FOUND_KEY, 'true'); } catch (e) {}
+
                 piscando = true;
                 trocar(LOGO_BLINK);
                 pular();
@@ -397,12 +402,28 @@
 
             // --- ALTERADO: Aura periódica em vez de piscar automático ---
             if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            
+            // --- NOVO: Verifica se o Easter egg já foi encontrado ---
+            let easterEggEncontrado = false;
+            try { easterEggEncontrado = localStorage.getItem(EASTER_EGG_FOUND_KEY) === 'true'; } catch (e) {}
+
+            if (easterEggEncontrado) {
+                console.log("Easter egg já descoberto. A aura de dica será desativada.");
+                return; // Não inicia o ciclo de aura se já foi encontrado
+            }
+
             const agendarAura = () => {
                 // Intervalo aleatório para a dica, um pouco mais espaçado que o piscar
                 const tempoAura = BLINK_AUTO_MIN_MS + Math.random() * (BLINK_AUTO_MAX_MS - BLINK_AUTO_MIN_MS);
                 setTimeout(() => {
-                    if (!document.hidden) mostrarAura();
-                    agendarAura(); // Agenda a próxima dica
+                    // Checa novamente antes de mostrar, caso a flag tenha sido setada em outra aba
+                    let encontradoAgora = false;
+                    try { encontradoAgora = localStorage.getItem(EASTER_EGG_FOUND_KEY) === 'true'; } catch (e) {}
+
+                    if (!document.hidden && !encontradoAgora) {
+                        mostrarAura();
+                        agendarAura(); // Agenda a próxima dica
+                    }
                 }, tempoAura);
             };
             agendarAura(); // Inicia o ciclo de dicas
