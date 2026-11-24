@@ -212,6 +212,13 @@
         const IMAGEM_FUNDO = "./Mapas/america-do-sul.png";
         document.getElementById('bgFazendaImage').setAttribute('href', IMAGEM_FUNDO);
 
+        // Diagnóstico: avisa quando a imagem de fundo não carrega (fundo fica preto)
+        let bgFalhou = false;
+        document.getElementById('bgFazendaImage').addEventListener('error', () => {
+            bgFalhou = true;
+            console.error('Imagem de fundo não carregou:', IMAGEM_FUNDO);
+        });
+
         // Polígonos por Talhão. Chave = código do talhão no QR Code.
         // Formato: "POLY:x,y x,y x,y POLY:x,y x,y x,y" (um ou mais polígonos por talhão)
         // Coordenadas no espaço 0–1000 (X) por 0–1000 (Y). O zoom é automático.
@@ -857,6 +864,7 @@
                     btnMapa.textContent = i18n[currentLang].btnMapHide;
                     // recalcula o zoom agora que o container tem dimensões reais
                     carregarDados(false);
+                    if (bgFalhou) exibirToast('Imagem de fundo não carregou: ' + IMAGEM_FUNDO, 'error');
                 } else {
                     mapContainer.style.display = 'none';
                     btnMapa.textContent = i18n[currentLang].btnMapShow;
