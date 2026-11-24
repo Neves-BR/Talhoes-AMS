@@ -116,6 +116,18 @@
 
         .logo-tucano { -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
 
+        /* Pulinho do logo ao piscar */
+        .logo-tucano.logo-pulo { animation: logoPulo 320ms ease-out; }
+        @keyframes logoPulo {
+            0%   { transform: translateY(0); }
+            35%  { transform: translateY(-6px); }
+            70%  { transform: translateY(1px); }
+            100% { transform: translateY(0); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .logo-tucano.logo-pulo { animation: none; }
+        }
+
         .card-footer {
             margin-top: 20px; padding-top: 12px; border-top: 1px solid #eee;
             text-align: center; font-size: 12px; color: #777;
@@ -329,15 +341,25 @@
             const esperar = (ms) => new Promise(r => setTimeout(r, ms));
             const trocar = (src) => logos.forEach(l => l.setAttribute('src', src));
 
+            // Pulinho (translateY) para chamar atenção; reinicia a animação a cada piscada
+            logos.forEach(l => l.addEventListener('animationend', () => l.classList.remove('logo-pulo')));
+            const pular = () => logos.forEach(l => {
+                l.classList.remove('logo-pulo');
+                void l.offsetWidth; // força reinício da animação
+                l.classList.add('logo-pulo');
+            });
+
             async function piscar(duplo = false) {
                 if (!pronto || piscando) return;
                 piscando = true;
                 trocar(LOGO_BLINK);
+                pular();
                 await esperar(BLINK_DURACAO_MS);
                 trocar(LOGO_PADRAO);
                 if (duplo) {
                     await esperar(120);
                     trocar(LOGO_BLINK);
+                    pular();
                     await esperar(BLINK_DURACAO_MS);
                     trocar(LOGO_PADRAO);
                 }
