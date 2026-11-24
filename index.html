@@ -116,6 +116,13 @@
 
         .logo-tucano { -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
 
+        /* Aura periódica: dica de que há um easter egg no logo */
+        .logo-tucano.logo-dica { animation: logoAura 6s ease-in-out infinite; cursor: pointer; }
+        @keyframes logoAura {
+            0%, 60%, 100% { filter: drop-shadow(0 0 0 rgba(255, 167, 38, 0)); }
+            80% { filter: drop-shadow(0 0 6px rgba(255, 167, 38, 0.85)) drop-shadow(0 0 14px rgba(255, 167, 38, 0.45)); }
+        }
+
         /* Pulinho do logo ao piscar */
         .logo-tucano.logo-pulo { animation: logoPulo 320ms ease-out; }
         @keyframes logoPulo {
@@ -124,27 +131,8 @@
             70%  { transform: translateY(1px); }
             100% { transform: translateY(0); }
         }
-
-        /* --- NOVO: Aura periódica como dica --- */
-        .logo-tucano.aura-dica {
-            border-radius: 50%; /* Garante que a sombra seja circular */
-            animation: auraPulso 2.5s ease-out;
-        }
-        @keyframes auraPulso {
-            0% {
-                box-shadow: 0 0 0 0 rgba(46, 125, 50, 0.4);
-            }
-            70% {
-                box-shadow: 0 0 0 15px rgba(46, 125, 50, 0);
-            }
-            100% {
-                box-shadow: 0 0 0 0 rgba(46, 125, 50, 0);
-            }
-        }
-
         @media (prefers-reduced-motion: reduce) {
-            .logo-tucano.logo-pulo,
-            .logo-tucano.aura-dica { animation: none; }
+            .logo-tucano.logo-pulo { animation: none; }
         }
 
         .card-footer {
@@ -342,9 +330,6 @@
         const LOGO_PADRAO = "./Tucano-mini.png";
         const LOGO_BLINK = "./Tucano_Blink.png";   // logo com o olho fechado
         const BLINK_DURACAO_MS = 150;                   // tempo com o olho fechado
-        const BLINK_AUTO_MIN_MS = 2000;                 // intervalo mínimo entre piscadas automáticas
-        const BLINK_AUTO_MAX_MS = 10000;                // intervalo máximo entre piscadas automáticas
-        const EASTER_EGG_FOUND_KEY = 'easterEggFound';  // Chave para o localStorage
 
         function iniciarBlinkLogo() {
             const logos = document.querySelectorAll('.logo-tucano');
@@ -369,19 +354,8 @@
                 l.classList.add('logo-pulo');
             });
 
-            // --- NOVO: Função para ativar a aura de dica ---
-            const mostrarAura = () => logos.forEach(l => {
-                l.classList.remove('aura-dica');
-                void l.offsetWidth; // força reinício da animação
-                l.classList.add('aura-dica');
-            });
-
             async function piscar(duplo = false) {
                 if (!pronto || piscando) return;
-                
-                // --- NOVO: Marca o Easter egg como encontrado ---
-                try { localStorage.setItem(EASTER_EGG_FOUND_KEY, 'true'); } catch (e) {}
-
                 piscando = true;
                 trocar(LOGO_BLINK);
                 pular();
@@ -397,36 +371,18 @@
                 piscando = false;
             }
 
-            // Toque/clique no logo: pisca duas vezes
-            logos.forEach(l => l.addEventListener('click', () => piscar(true)));
+            // Dica visual (aura periódica) até o logo ser tocado; depois some (nesta sessão)
+            let descoberto = false;
+            try { descoberto = sessionStorage.getItem('easter_descoberto') === '1'; } catch (e) { /* ignora */ }
+            if (!descoberto) logos.forEach(l => l.classList.add('logo-dica'));
 
-            // --- ALTERADO: Aura periódica em vez de piscar automático ---
-            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-            
-            // --- NOVO: Verifica se o Easter egg já foi encontrado ---
-            let easterEggEncontrado = false;
-            try { easterEggEncontrado = localStorage.getItem(EASTER_EGG_FOUND_KEY) === 'true'; } catch (e) {}
-
-            if (easterEggEncontrado) {
-                console.log("Easter egg já descoberto. A aura de dica será desativada.");
-                return; // Não inicia o ciclo de aura se já foi encontrado
-            }
-
-            const agendarAura = () => {
-                // Intervalo aleatório para a dica, um pouco mais espaçado que o piscar
-                const tempoAura = BLINK_AUTO_MIN_MS + Math.random() * (BLINK_AUTO_MAX_MS - BLINK_AUTO_MIN_MS);
-                setTimeout(() => {
-                    // Checa novamente antes de mostrar, caso a flag tenha sido setada em outra aba
-                    let encontradoAgora = false;
-                    try { encontradoAgora = localStorage.getItem(EASTER_EGG_FOUND_KEY) === 'true'; } catch (e) {}
-
-                    if (!document.hidden && !encontradoAgora) {
-                        mostrarAura();
-                        agendarAura(); // Agenda a próxima dica
-                    }
-                }, tempoAura);
-            };
-            agendarAura(); // Inicia o ciclo de dicas
+            // Só pisca ao ser tocado: duas piscadas
+            logos.forEach(l => l.addEventListener('click', () => {
+                if (!pronto) return;
+                logos.forEach(x => x.classList.remove('logo-dica'));
+                try { sessionStorage.setItem('easter_descoberto', '1'); } catch (e) { /* ignora */ }
+                piscar(true);
+            }));
         }
 
         // Dados do QR recebidos pela URL (capturados antes de limpar a barra de endereço)
