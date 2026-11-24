@@ -44,7 +44,8 @@
             white-space: nowrap; text-align: center; box-sizing: border-box;
             width: max-content; max-width: 90vw;
         }
-        body.is-standalone .global-footer { display: none !important; }
+        body.is-standalone .global-footer,
+        body.modo-online .global-footer { display: none !important; }
 
         #installOverlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
@@ -65,8 +66,10 @@
         .install-note { font-size: 11px; color: #888888; margin-top: 14px; margin-bottom: 0; line-height: 1.3; font-weight: 400; }
 
         .app-content { display: none; margin-top: 40px; }
-        body.is-standalone .app-content { display: block; }
-        body.is-standalone #installOverlay { display: none !important; }
+        body.is-standalone .app-content,
+        body.modo-online .app-content { display: block; }
+        body.is-standalone #installOverlay,
+        body.modo-online #installOverlay { display: none !important; }
 
         .card {
             background: #fff; border-radius: 10px; padding: 20px;
@@ -92,6 +95,10 @@
         }
         .btn.disabled { background: #ccc; pointer-events: none; }
         .btn-install { background: #1565c0; font-size: 15px; }
+        .btn-skip {
+            background: transparent; color: #555; border: 1px solid #ccc;
+            font-size: 13px; font-weight: 600; margin-top: 10px;
+        }
 
         #reader-container { margin-top: 20px; border-top: 1px dashed #ccc; padding-top: 15px; }
         #reader { display: none; width: 100%; border-radius: 8px; overflow: hidden; background: #222; min-height: 200px; }
@@ -150,6 +157,7 @@
             <p data-i18n="installText">Para utilizar o aplicativo de Informações de campo, você precisa instalá-lo no
                 seu dispositivo.</p>
             <button id="btnInstalarModal" class="btn btn-install" data-i18n="btnInstall">Instalar Aplicativo</button>
+            <button id="btnPularInstalacao" class="btn btn-skip" data-i18n="btnSkipInstall">Continuar sem instalar (apenas online)</button>
             <p class="install-note" data-i18n="installSafeNote">Instalação rápida, leve e sem acesso a dados pessoais.
             </p>
             <p id="iosInstructions" style="display: none; font-size: 11px; margin-top: 14px; color: #888;"
@@ -239,6 +247,7 @@
                 installTitle: "Instalação Necessária",
                 installText: "Para utilizar o aplicativo de Informações de campo, você precisa instalá-lo no seu dispositivo.",
                 btnInstall: "Instalar Aplicativo",
+                btnSkipInstall: "Continuar sem instalar (apenas online)",
                 installSafeNote: "Instalação rápida, leve e sem acesso a dados pessoais.",
                 iosInstructions: "No iOS/Safari: toque em <strong>Compartilhar</strong> e selecione <strong>Adicionar à Tela de Início</strong>.",
                 installSuccessTitle: "Instalação Concluída!",
@@ -269,6 +278,7 @@
                 installTitle: "Installation Required",
                 installText: "To use the Field Data app, you need to install it on your device.",
                 btnInstall: "Install Application",
+                btnSkipInstall: "Continue without installing (online only)",
                 installSafeNote: "Fast, lightweight installation with no access to personal data.",
                 iosInstructions: "On iOS/Safari: tap <strong>Share</strong> and select <strong>Add to Home Screen</strong>.",
                 installSuccessTitle: "Installation Complete!",
@@ -294,6 +304,21 @@
                 lblVersion: "Version"
             }
         };
+
+        // Dados do QR recebidos pela URL (capturados antes de limpar a barra de endereço)
+        let dadosDaUrl = '';
+
+        // Modo online: usa o app direto no navegador, sem instalar (vale enquanto a aba/sessão durar)
+        function ativarModoOnline() {
+            document.body.classList.add('modo-online');
+            try { sessionStorage.setItem('modo_online', '1'); } catch (e) { /* ignora */ }
+            if (dadosDaUrl) {
+                window.location.hash = dadosDaUrl; // dispara carregarDados via hashchange
+                dadosDaUrl = '';
+            } else {
+                carregarDados(false);
+            }
+        }
 
         let currentLang = localStorage.getItem('app_lang') || (navigator.language.startsWith('en') ? 'en' : 'pt');
 
@@ -845,6 +870,9 @@
         });
 
         window.addEventListener('DOMContentLoaded', () => {
+            const paramsIniciais = new URLSearchParams(window.location.search);
+            dadosDaUrl = window.location.hash.substring(1) || paramsIniciais.get('dados') || '';
+
             if (window.location.hash || window.location.search) {
                 history.replaceState(null, "", window.location.pathname);
             }
@@ -854,6 +882,11 @@
             carregarInfoDoSW();
             iniciarAutoAtualizacao(30);
             iniciarGestosMapa();
+
+            document.getElementById('btnPularInstalacao').addEventListener('click', ativarModoOnline);
+            let modoOnlineSalvo = false;
+            try { modoOnlineSalvo = sessionStorage.getItem('modo_online') === '1'; } catch (e) { /* ignora */ }
+            if (modoOnlineSalvo && !document.body.classList.contains('is-standalone')) ativarModoOnline();
 
             document.getElementById('m').addEventListener('click', (e) => {
                 e.preventDefault();
