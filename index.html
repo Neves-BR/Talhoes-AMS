@@ -131,8 +131,20 @@
             70%  { transform: translateY(1px); }
             100% { transform: translateY(0); }
         }
+
+        /* Leves movimentos circulares (tontura) quando o tucano fica zonzo */
+        .logo-tucano.logo-zonzo { animation: logoZonzo 0.9s linear infinite; }
+        @keyframes logoZonzo {
+            0%   { transform: translate(0px, -4px) rotate(0deg); }
+            25%  { transform: translate(4px, 0px) rotate(6deg); }
+            50%  { transform: translate(0px, 4px) rotate(0deg); }
+            75%  { transform: translate(-4px, 0px) rotate(-6deg); }
+            100% { transform: translate(0px, -4px) rotate(0deg); }
+        }
+
         @media (prefers-reduced-motion: reduce) {
-            .logo-tucano.logo-pulo { animation: none; }
+            .logo-tucano.logo-pulo,
+            .logo-tucano.logo-zonzo { animation: none; }
         }
 
         .card-footer {
@@ -400,7 +412,14 @@
                 }
 
                 trocar(LOGO_ZONZO);
+                logos.forEach(l => {
+                    l.classList.remove('logo-pulo');
+                    l.classList.add('logo-zonzo');
+                });
+
                 await esperar(ZONZO_DURACAO_MS);
+
+                logos.forEach(l => l.classList.remove('logo-zonzo'));
                 trocar(LOGO_PADRAO);
                 zonzoAtivo = false;
             }
