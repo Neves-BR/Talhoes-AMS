@@ -124,8 +124,27 @@
             70%  { transform: translateY(1px); }
             100% { transform: translateY(0); }
         }
+
+        /* --- NOVO: Aura periódica como dica --- */
+        .logo-tucano.aura-dica {
+            border-radius: 50%; /* Garante que a sombra seja circular */
+            animation: auraPulso 2.5s ease-out;
+        }
+        @keyframes auraPulso {
+            0% {
+                box-shadow: 0 0 0 0 rgba(46, 125, 50, 0.4);
+            }
+            70% {
+                box-shadow: 0 0 0 15px rgba(46, 125, 50, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(46, 125, 50, 0);
+            }
+        }
+
         @media (prefers-reduced-motion: reduce) {
-            .logo-tucano.logo-pulo { animation: none; }
+            .logo-tucano.logo-pulo,
+            .logo-tucano.aura-dica { animation: none; }
         }
 
         .card-footer {
@@ -349,6 +368,13 @@
                 l.classList.add('logo-pulo');
             });
 
+            // --- NOVO: Função para ativar a aura de dica ---
+            const mostrarAura = () => logos.forEach(l => {
+                l.classList.remove('aura-dica');
+                void l.offsetWidth; // força reinício da animação
+                l.classList.add('aura-dica');
+            });
+
             async function piscar(duplo = false) {
                 if (!pronto || piscando) return;
                 piscando = true;
@@ -369,16 +395,17 @@
             // Toque/clique no logo: pisca duas vezes
             logos.forEach(l => l.addEventListener('click', () => piscar(true)));
 
-            // Piscadas automáticas em intervalos aleatórios (desligadas com "reduzir movimento")
+            // --- ALTERADO: Aura periódica em vez de piscar automático ---
             if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-            const agendar = () => {
-                const t = BLINK_AUTO_MIN_MS + Math.random() * (BLINK_AUTO_MAX_MS - BLINK_AUTO_MIN_MS);
+            const agendarAura = () => {
+                // Intervalo aleatório para a dica, um pouco mais espaçado que o piscar
+                const tempoAura = BLINK_AUTO_MIN_MS + Math.random() * (BLINK_AUTO_MAX_MS - BLINK_AUTO_MIN_MS);
                 setTimeout(() => {
-                    if (!document.hidden) piscar(Math.random() < 0.3); // 30% das vezes pisca duas vezes
-                    agendar();
-                }, t);
+                    if (!document.hidden) mostrarAura();
+                    agendarAura(); // Agenda a próxima dica
+                }, tempoAura);
             };
-            agendar();
+            agendarAura(); // Inicia o ciclo de dicas
         }
 
         // Dados do QR recebidos pela URL (capturados antes de limpar a barra de endereço)
