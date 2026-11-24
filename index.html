@@ -326,23 +326,38 @@
             }
         };
 
-        // ---- Easter egg: o tucano pisca ----
+        // ---- Easter egg: o tucano pisca e fica zonzo após cliques seguidos ----
         const LOGO_PADRAO = "./Tucano-mini.png";
-        const LOGO_BLINK = "./Tucano_Blink.png";   // logo com o olho fechado
-        const BLINK_DURACAO_MS = 150;                   // tempo com o olho fechado
+        const LOGO_BLINK = "./Tucano_Blink.png";       // logo com o olho fechado
+        const LOGO_ZONZO = "./Tucano_zonzo.png";       // logo zonzo após cliques rápidos
+        const BLINK_DURACAO_MS = 150;                  // tempo com o olho fechado
+        const ZONZO_DURACAO_MS = 3000;                 // tempo zonzo (3 segundos)
+        const CLIQUES_PARA_ZONZO = 5;                  // cliques seguidos necessários
+        const JANELA_CLIQUES_MS = 2000;                // intervalo máximo entre cliques seguidos
 
         function iniciarBlinkLogo() {
             const logos = document.querySelectorAll('.logo-tucano');
             if (!logos.length) return;
 
-            // Pré-carrega a imagem; se não existir, o efeito fica desligado (sem imagem quebrada)
-            const pre = new Image();
-            let pronto = false;
-            pre.onload = () => { pronto = true; };
-            pre.onerror = () => console.warn('Logo blink não encontrada:', LOGO_BLINK);
-            pre.src = LOGO_BLINK;
+            // Pré-carrega a imagem de piscar; se não existir, o efeito fica desligado
+            const preBlink = new Image();
+            let prontoBlink = false;
+            preBlink.onload = () => { prontoBlink = true; };
+            preBlink.onerror = () => console.warn('Logo blink não encontrada:', LOGO_BLINK);
+            preBlink.src = LOGO_BLINK;
+
+            // Pré-carrega a imagem zonzo
+            const preZonzo = new Image();
+            let prontoZonzo = false;
+            preZonzo.onload = () => { prontoZonzo = true; };
+            preZonzo.onerror = () => console.warn('Logo zonzo não encontrada:', LOGO_ZONZO);
+            preZonzo.src = LOGO_ZONZO;
 
             let piscando = false;
+            let zonzoAtivo = false;
+            let cliquesSeguidos = 0;
+            let timerResetCliques = null;
+
             const esperar = (ms) => new Promise(r => setTimeout(r, ms));
             const trocar = (src) => logos.forEach(l => l.setAttribute('src', src));
 
@@ -355,20 +370,39 @@
             });
 
             async function piscar(duplo = false) {
-                if (!pronto || piscando) return;
+                if (!prontoBlink || piscando || zonzoAtivo) return;
                 piscando = true;
                 trocar(LOGO_BLINK);
                 pular();
                 await esperar(BLINK_DURACAO_MS);
-                trocar(LOGO_PADRAO);
-                if (duplo) {
+                if (!zonzoAtivo) trocar(LOGO_PADRAO);
+                if (duplo && !zonzoAtivo) {
                     await esperar(120);
-                    trocar(LOGO_BLINK);
-                    pular();
-                    await esperar(BLINK_DURACAO_MS);
-                    trocar(LOGO_PADRAO);
+                    if (!zonzoAtivo) {
+                        trocar(LOGO_BLINK);
+                        pular();
+                        await esperar(BLINK_DURACAO_MS);
+                        if (!zonzoAtivo) trocar(LOGO_PADRAO);
+                    }
                 }
                 piscando = false;
+            }
+
+            async function ativarZonzo() {
+                if (!prontoZonzo || zonzoAtivo) return;
+                zonzoAtivo = true;
+                cliquesSeguidos = 0;
+                clearTimeout(timerResetCliques);
+
+                // Aguarda a animação da piscada finalizar antes de exibir o tucano zonzo
+                while (piscando) {
+                    await esperar(30);
+                }
+
+                trocar(LOGO_ZONZO);
+                await esperar(ZONZO_DURACAO_MS);
+                trocar(LOGO_PADRAO);
+                zonzoAtivo = false;
             }
 
             // Dica visual (aura periódica) até o logo ser tocado; depois some (nesta sessão)
@@ -376,12 +410,23 @@
             try { descoberto = sessionStorage.getItem('easter_descoberto') === '1'; } catch (e) { /* ignora */ }
             if (!descoberto) logos.forEach(l => l.classList.add('logo-dica'));
 
-            // Só pisca ao ser tocado: duas piscadas
+            // Ao tocar: pisca; se clicar várias vezes seguidas, ativa o modo zonzo por 3s
             logos.forEach(l => l.addEventListener('click', () => {
-                if (!pronto) return;
+                if (!prontoBlink && !prontoZonzo) return;
                 logos.forEach(x => x.classList.remove('logo-dica'));
                 try { sessionStorage.setItem('easter_descoberto', '1'); } catch (e) { /* ignora */ }
-                piscar(true);
+
+                if (zonzoAtivo) return;
+
+                cliquesSeguidos++;
+                clearTimeout(timerResetCliques);
+                timerResetCliques = setTimeout(() => { cliquesSeguidos = 0; }, JANELA_CLIQUES_MS);
+
+                if (cliquesSeguidos >= CLIQUES_PARA_ZONZO && prontoZonzo) {
+                    ativarZonzo();
+                } else {
+                    piscar(true);
+                }
             }));
         }
 
