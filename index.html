@@ -528,6 +528,40 @@
                 .setAttribute('viewBox', `${cx - w / 2} ${cy - h / 2} ${w} ${h}`);
         }
 
+        // ---- Retorno automático ao enquadramento inicial ----
+        const RETORNO_MS = 2000;     // tempo sem tocar no mapa antes de voltar ao tamanho original
+        const RETORNO_ANIM_MS = 350; // duração da transição de volta
+        let timerRetorno = null, animRetorno = null;
+
+        function cancelarRetorno() {
+            clearTimeout(timerRetorno);
+            if (animRetorno) { cancelAnimationFrame(animRetorno); animRetorno = null; }
+        }
+
+        function agendarRetorno() {
+            clearTimeout(timerRetorno);
+            timerRetorno = setTimeout(voltarAoInicio, RETORNO_MS);
+        }
+
+        function voltarAoInicio() {
+            if (!baseMapa) return;
+            const ini = { ...viewMapa };
+            const fim = { cx: baseMapa.x + baseMapa.w / 2, cy: baseMapa.y + baseMapa.h / 2, z: 1 };
+            if (Math.abs(ini.z - 1) < 0.001 && Math.abs(ini.cx - fim.cx) < 0.5 && Math.abs(ini.cy - fim.cy) < 0.5) return;
+
+            const t0 = performance.now();
+            const passo = (agora) => {
+                const t = Math.min((agora - t0) / RETORNO_ANIM_MS, 1);
+                const e = 1 - Math.pow(1 - t, 3); // easing suave
+                viewMapa.cx = ini.cx + (fim.cx - ini.cx) * e;
+                viewMapa.cy = ini.cy + (fim.cy - ini.cy) * e;
+                viewMapa.z = ini.z + (fim.z - ini.z) * e;
+                aplicarViewBox();
+                animRetorno = t < 1 ? requestAnimationFrame(passo) : null;
+            };
+            animRetorno = requestAnimationFrame(passo);
+        }
+
         // Zoom mantendo fixo o ponto (px, py) em pixels dentro do container
         function zoomEm(px, py, fator, rect) {
             if (!baseMapa) return;
@@ -553,6 +587,7 @@
             };
 
             el.addEventListener('pointerdown', (e) => {
+                cancelarRetorno();
                 el.setPointerCapture(e.pointerId);
                 ponteiros.set(e.pointerId, { x: e.clientX, y: e.clientY });
                 if (ponteiros.size === 2) distAnterior = distancia();
@@ -579,18 +614,25 @@
                 }
             });
 
-            const soltar = (e) => { ponteiros.delete(e.pointerId); distAnterior = 0; };
+            const soltar = (e) => {
+                ponteiros.delete(e.pointerId);
+                distAnterior = 0;
+                if (ponteiros.size === 0) agendarRetorno(); // volta ao original após 2 s sem toque
+            };
             el.addEventListener('pointerup', soltar);
             el.addEventListener('pointercancel', soltar);
 
             el.addEventListener('wheel', (e) => {
                 e.preventDefault();
                 const rect = el.getBoundingClientRect();
+                cancelarRetorno();
                 zoomEm(e.clientX - rect.left, e.clientY - rect.top, Math.exp(-e.deltaY * 0.0015), rect);
+                agendarRetorno();
             }, { passive: false });
 
             // Duplo toque / duplo clique volta ao enquadramento inicial
             el.addEventListener('dblclick', () => {
+                cancelarRetorno();
                 if (!baseMapa) return;
                 viewMapa = { cx: baseMapa.x + baseMapa.w / 2, cy: baseMapa.y + baseMapa.h / 2, z: 1 };
                 aplicarViewBox();
