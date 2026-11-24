@@ -883,6 +883,13 @@
 
             alterarIdioma(currentLang);
             verificarStatusApp();
+
+            // App instalado aberto por um link de QR: aplica os dados da URL (que foram limpos acima)
+            if (document.body.classList.contains('is-standalone') && dadosDaUrl) {
+                window.location.hash = dadosDaUrl; // dispara carregarDados via hashchange
+                dadosDaUrl = '';
+            }
+
             carregarInfoDoSW();
             iniciarAutoAtualizacao(30);
             iniciarGestosMapa();
