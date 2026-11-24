@@ -447,6 +447,22 @@
             }
         }
 
+        // CORREÇÃO (manifest): URL da página sem hash/query, usada como base para
+        // resolver caminhos relativos. Um manifest servido via blob: não consegue
+        // resolver "./index.html" sozinho (a base seria o próprio blob:), então
+        // start_url, scope, id e ícones precisam ser convertidos em URLs absolutas.
+        function obterBaseDaPagina() {
+            return window.location.href.split('#')[0].split('?')[0];
+        }
+
+        function resolverUrlAbsoluta(caminho, base) {
+            try {
+                return new URL(caminho, base).href;
+            } catch (e) {
+                return caminho;
+            }
+        }
+
         async function atualizarManifest(lang) {
             let manifestData;
             try {
@@ -472,6 +488,20 @@
 
             manifestData.name = i18n[lang].appName;
             manifestData.short_name = i18n[lang].appShortName;
+
+            // CORREÇÃO (manifest): tornar todos os caminhos absolutos
+            const base = obterBaseDaPagina();
+            const startUrl = resolverUrlAbsoluta(manifestData.start_url || './index.html', base);
+            manifestData.start_url = startUrl;
+            manifestData.scope = resolverUrlAbsoluta(manifestData.scope || './', base);
+            manifestData.id = resolverUrlAbsoluta(manifestData.id || manifestData.start_url, base);
+
+            if (Array.isArray(manifestData.icons)) {
+                manifestData.icons = manifestData.icons.map(icone => ({
+                    ...icone,
+                    src: resolverUrlAbsoluta(icone.src, base)
+                }));
+            }
 
             const stringData = JSON.stringify(manifestData);
             const blob = new Blob([stringData], { type: 'application/json' });
@@ -561,18 +591,21 @@
             }, 1200);
         }
 
+        // CORREÇÃO (QR): função única para ler os dados da URL (hash ou ?dados=)
+        function lerDadosDaUrl() {
+            const hash = window.location.hash.substring(1);
+            if (hash) return hash;
+
+            const params = new URLSearchParams(window.location.search);
+            return params.get('dados') || '';
+        }
+
         function verificarStatusApp() {
             const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
                 window.navigator.standalone ||
                 document.referrer.includes('android-app://');
 
-            let dadosStr = window.location.hash.substring(1);
-            if (!dadosStr) {
-                const params = new URLSearchParams(window.location.search);
-                if (params.has('dados')) {
-                    dadosStr = params.get('dados');
-                }
-            }
+            const dadosStr = lerDadosDaUrl();
 
             if (isStandalone) {
                 document.body.classList.add('is-standalone');
@@ -720,13 +753,7 @@
         }
 
         function carregarDados(exibirToastNotif = true) {
-            let hash = window.location.hash.substring(1);
-            if (!hash) {
-                const params = new URLSearchParams(window.location.search);
-                if (params.has('dados')) {
-                    hash = params.get('dados');
-                }
-            }
+            const hash = lerDadosDaUrl();
 
             const btnMapa = document.getElementById('m');
             const mapContainer = document.getElementById('mapContainer');
@@ -955,18 +982,17 @@
             if (intervaloAtualizacao) {
                 clearInterval(intervaloAtualizacao);
             }
-        
+
             intervaloAtualizacao = setInterval(() => {
                 // Verifica se há dados carregados antes de atualizar
-                let hash = window.location.hash.substring(1);
-                if (hash) {
+                if (lerDadosDaUrl()) {
                     console.log("Atualizando dados em segundo plano...");
                     // Executa o carregamento mantendo os dados e atualizando sem toast ruidoso
                     carregarDados(false);
                 }
             }, intervaloEmSegundos * 1000);
         }
-        
+
         // Parar a atualização quando o app for para segundo plano (para economizar bateria)
         document.addEventListener("visibilitychange", () => {
             if (document.hidden) {
@@ -976,7 +1002,14 @@
             }
         });
         window.addEventListener('DOMContentLoaded', () => {
-            if (window.location.hash || window.location.search) {
+            // CORREÇÃO (QR): antes, a URL era limpa aqui (history.replaceState com
+            // apenas o pathname) ANTES de alterarIdioma() e verificarStatusApp()
+            // lerem os dados, e o app abria vazio. Agora os dados são preservados:
+            // se vierem em ?dados=, são movidos para o hash (sem recarregar a página).
+            const dadosIniciais = lerDadosDaUrl();
+            if (dadosIniciais) {
+                history.replaceState(null, "", window.location.pathname + '#' + dadosIniciais);
+            } else if (window.location.search) {
                 history.replaceState(null, "", window.location.pathname);
             }
 
