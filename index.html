@@ -708,7 +708,11 @@
 
             document.getElementById('f').textContent = FAZENDA_FIXA;
             document.getElementById('t').textContent = talhao || '-';
-            document.getElementById('a').textContent = area ? `${area}${i18n[currentLang].unitHa}` : '-';
+            // Separador decimal: vírgula em PT, ponto em EN
+            const areaFormatada = area
+                ? (currentLang === 'pt' ? area.replace('.', ',') : area.replace(',', '.'))
+                : '';
+            document.getElementById('a').textContent = areaFormatada ? `${areaFormatada}${i18n[currentLang].unitHa}` : '-';
             document.getElementById('e').textContent = especie || '-';
             document.getElementById('p').textContent = DATA_PLANTIO_FIXA;
 
