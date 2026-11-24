@@ -9,7 +9,12 @@
     <title>Informações de campo - Tucano Florestal</title>
 
     <style>
-        html, body { touch-action: manipulation; }
+        html,
+        body {
+            /* overscroll-behavior-y: contain; */
+            /* scroll-behavior: auto; */
+            touch-action: manipulation;
+        }
 
         body {
             font-family: system-ui, -apple-system, sans-serif;
@@ -20,118 +25,256 @@
         }
 
         .lang-switch {
-            position: fixed; top: 15px; right: 15px;
-            display: flex; gap: 5px; z-index: 20000;
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            gap: 5px;
+            z-index: 20000;
         }
 
         .lang-btn {
-            background: #ffffff; border: 1px solid #2e7d32;
-            padding: 6px 12px; border-radius: 6px;
-            font-size: 12px; font-weight: bold; cursor: pointer;
-            color: #2e7d32; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            background: #ffffff;
+            border: 1px solid #2e7d32;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #2e7d32;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
             transition: all 0.2s ease;
         }
-        .lang-btn.active { background: #2e7d32; color: #ffffff; }
+
+        .lang-btn.active {
+            background: #2e7d32;
+            color: #ffffff;
+        }
 
         .global-footer {
-            position: fixed; bottom: 20px; left: 50%;
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
             transform: translateX(-50%);
-            display: flex; align-items: center; justify-content: center;
-            z-index: 20000; font-size: 11px; color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 20000;
+            font-size: 11px;
+            color: #ffffff;
             background: rgba(0, 0, 0, 0.65);
-            padding: 6px 16px; border-radius: 20px;
-            backdrop-filter: blur(4px); pointer-events: none;
-            white-space: nowrap; text-align: center; box-sizing: border-box;
-            width: max-content; max-width: 90vw;
+            padding: 6px 16px;
+            border-radius: 20px;
+            backdrop-filter: blur(4px);
+            pointer-events: none;
+            white-space: nowrap;
+            text-align: center;
+            box-sizing: border-box;
+            width: max-content;
+            max-width: 90vw;
         }
-        body.is-standalone .global-footer,
-        body.modo-online .global-footer { display: none !important; }
+
+        body.is-standalone .global-footer {
+            display: none !important;
+        }
 
         #installOverlay {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: #233621; color: #ffffff; z-index: 10000;
-            display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            text-align: center; padding: 30px; box-sizing: border-box;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #233621;
+            color: #ffffff;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 30px;
+            box-sizing: border-box;
         }
 
         .install-box {
-            background: #ffffff; color: #333333;
-            padding: 25px 20px; border-radius: 12px;
+            background: #ffffff;
+            color: #333333;
+            padding: 25px 20px;
+            border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            max-width: 320px; width: 100%;
+            max-width: 320px;
+            width: 100%;
         }
-        .install-box h3 { margin-top: 0; color: #2e7d32; font-size: 20px; }
-        .install-box p { font-size: 14px; color: #555; line-height: 1.4; margin-bottom: 20px; }
-        .install-note { font-size: 11px; color: #888888; margin-top: 14px; margin-bottom: 0; line-height: 1.3; font-weight: 400; }
 
-        .app-content { display: none; margin-top: 40px; }
-        body.is-standalone .app-content,
-        body.modo-online .app-content { display: block; }
-        body.is-standalone #installOverlay,
-        body.modo-online #installOverlay { display: none !important; }
+        .install-box h3 {
+            margin-top: 0;
+            color: #2e7d32;
+            font-size: 20px;
+        }
+
+        .install-box p {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.4;
+            margin-bottom: 20px;
+        }
+
+        .install-note {
+            font-size: 11px;
+            color: #888888;
+            margin-top: 14px;
+            margin-bottom: 0;
+            line-height: 1.3;
+            font-weight: 400;
+        }
+
+        .app-content {
+            display: none;
+            margin-top: 40px;
+        }
+
+        body.is-standalone .app-content {
+            display: block;
+        }
+
+        body.is-standalone #installOverlay {
+            display: none !important;
+        }
 
         .card {
-            background: #fff; border-radius: 10px; padding: 20px;
+            background: #fff;
+            border-radius: 10px;
+            padding: 20px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             border-top: 5px solid #2e7d32;
-            max-width: 360px; margin: auto;
+            max-width: 360px;
+            margin: auto;
         }
 
         h2 {
-            margin: 0 0 15px 0; color: #2e7d32; font-size: 20px;
-            border-bottom: 1px solid #eee; padding-bottom: 8px; text-align: center;
+            margin: 0 0 15px 0;
+            color: #2e7d32;
+            font-size: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
+            text-align: center;
         }
 
-        .item { margin-bottom: 12px; font-size: 15px; }
-        .label { font-weight: 600; color: #666; display: block; font-size: 12px; text-transform: uppercase; }
-        .value { color: #111; font-size: 16px; font-weight: 500; }
+        .item {
+            margin-bottom: 12px;
+            font-size: 15px;
+        }
+
+        .label {
+            font-weight: 600;
+            color: #666;
+            display: block;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .value {
+            color: #111;
+            font-size: 16px;
+            font-weight: 500;
+        }
 
         .btn {
-            display: block; margin-top: 15px; padding: 12px;
-            background: #2e7d32; color: #fff; text-align: center;
-            text-decoration: none; border-radius: 6px; font-weight: bold;
-            border: none; width: 100%; box-sizing: border-box; cursor: pointer;
-        }
-        .btn.disabled { background: #ccc; pointer-events: none; }
-        .btn-install { background: #1565c0; font-size: 15px; }
-        .btn-skip {
-            background: transparent; color: #555; border: 1px solid #ccc;
-            font-size: 13px; font-weight: 600; margin-top: 10px;
+            display: block;
+            margin-top: 15px;
+            padding: 12px;
+            background: #2e7d32;
+            color: #fff;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+            border: none;
+            width: 100%;
+            box-sizing: border-box;
+            cursor: pointer;
         }
 
-        #reader-container { margin-top: 20px; border-top: 1px dashed #ccc; padding-top: 15px; }
-        #reader { display: none; width: 100%; border-radius: 8px; overflow: hidden; background: #222; min-height: 200px; }
-        #reader select, #reader button, #reader a { display: none !important; }
-        .btn-scanner { background: #37474f; margin-bottom: 10px; }
-
-        /* Mapa interativo: arrastar e zoom (pinça / roda do mouse) */
-        #mapContainer {
-            touch-action: none;
-            cursor: grab;
-            user-select: none;
-            -webkit-user-select: none;
+        .btn.disabled {
+            background: #ccc;
+            pointer-events: none;
         }
-        #mapContainer:active { cursor: grabbing; }
+
+        .btn-install {
+            background: #1565c0;
+            font-size: 15px;
+        }
+
+        #reader-container {
+            margin-top: 20px;
+            border-top: 1px dashed #ccc;
+            padding-top: 15px;
+        }
+
+        #reader {
+            display: none;
+            width: 100%;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #222;
+            min-height: 200px;
+        }
+
+        #reader select,
+        #reader button,
+        #reader a {
+            display: none !important;
+        }
+
+        .btn-scanner {
+            background: #37474f;
+            margin-bottom: 10px;
+        }
 
         .card-footer {
-            margin-top: 20px; padding-top: 12px; border-top: 1px solid #eee;
-            text-align: center; font-size: 12px; color: #777;
+            margin-top: 20px;
+            padding-top: 12px;
+            border-top: 1px solid #eee;
+            text-align: center;
+            font-size: 12px;
+            color: #777;
         }
 
         .toast {
-            position: fixed; bottom: 20px; left: 50%;
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
             transform: translateX(-50%) translateY(20px);
-            z-index: 9999; width: 85%; max-width: 320px;
-            padding: 12px 16px; border-radius: 8px;
-            font-size: 14px; font-weight: 600; text-align: center;
+            z-index: 9999;
+            width: 85%;
+            max-width: 320px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-            opacity: 0; visibility: hidden;
-            transition: all 0.3s ease-in-out; pointer-events: none;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease-in-out;
+            pointer-events: none;
         }
-        .toast.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
-        .toast-success { background-color: #2e7d32; color: #ffffff; }
-        .toast-error { background-color: #c62828; color: #ffffff; }
+
+        .toast.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast-success {
+            background-color: #2e7d32;
+            color: #ffffff;
+        }
+
+        .toast-error {
+            background-color: #c62828;
+            color: #ffffff;
+        }
     </style>
     <script src="https://unpkg.com/html5-qrcode@2.3.8"></script>
     <base target="_blank">
@@ -157,7 +300,6 @@
             <p data-i18n="installText">Para utilizar o aplicativo de Informações de campo, você precisa instalá-lo no
                 seu dispositivo.</p>
             <button id="btnInstalarModal" class="btn btn-install" data-i18n="btnInstall">Instalar Aplicativo</button>
-            <button id="btnPularInstalacao" class="btn btn-skip" data-i18n="btnSkipInstall">Continuar sem instalar (apenas online)</button>
             <p class="install-note" data-i18n="installSafeNote">Instalação rápida, leve e sem acesso a dados pessoais.
             </p>
             <p id="iosInstructions" style="display: none; font-size: 11px; margin-top: 14px; color: #888;"
@@ -178,18 +320,23 @@
 
         <h2 data-i18n="appTitle">Informações de campo - Tucano Florestal</h2>
 
-        <div class="item"><span class="label" data-i18n="lblFazenda">Fazenda</span><span class="value" id="f">-</span></div>
-        <div class="item"><span class="label" data-i18n="lblTalhao">Talhão</span><span class="value" id="t">-</span></div>
-        <div class="item"><span class="label" data-i18n="lblArea">Área</span><span class="value" id="a">-</span></div>
-        <div class="item"><span class="label" data-i18n="lblEspecie">Espécie</span><span class="value" id="e">-</span></div>
-        <div class="item"><span class="label" data-i18n="lblPlantio">Data de Plantio</span><span class="value" id="p">-</span></div>
+        <div class="item"><span class="label" data-i18n="lblFazenda">Fazenda</span><span class="value" id="f">-</span>
+        </div>
+        <div class="item"><span class="label" data-i18n="lblTalhao">Talhão</span><span class="value" id="t">-</span>
+        </div>
+        <div class="item"><span class="label" data-i18n="lblArea">Área do Talhão</span><span class="value"
+                id="a">-</span></div>
+        <div class="item"><span class="label" data-i18n="lblEspecie">Espécie</span><span class="value" id="e">-</span>
+        </div>
+        <div class="item"><span class="label" data-i18n="lblPlantio">Data de Plantio</span><span class="value"
+                id="p">-</span></div>
 
         <button id="m" class="btn disabled" data-i18n="btnMapShow">Visualizar Mapa</button>
 
         <div id="mapContainer"
             style="display: none; margin-top: 15px; width: 100%; height: 220px; background: #111; border: 1px solid #c8e6c9; border-radius: 8px; box-sizing: border-box; overflow: hidden; text-align: center; position: relative;">
             <svg id="talhaoSvg" width="100%" height="100%" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet">
-                <image id="bgFazendaImage" href="./Mapas/america-do-sul.png" x="0" y="0" width="1000" height="1000"
+                <image id="bgFazendaImage" href="./Mapas/padrao.png" x="0" y="0" width="1000" height="1000"
                     preserveAspectRatio="none" />
                 <path id="polygonTalhao" d="" fill="#2e7d32" fill-opacity="0.55" stroke="#ffffff" stroke-width="1.5"
                     fill-rule="nonzero" />
@@ -209,37 +356,6 @@
     </div>
 
     <script>
-        /* ============================================================
-           CONFIGURAÇÃO FIXA (HARDCODED)
-           ============================================================ */
-
-        // Valor fixo do campo Fazenda (só é exibido após ler um QR Code)
-        const FAZENDA_FIXA = "América do Sul";
-
-        // Valor fixo do campo Data de Plantio (só é exibido após ler um QR Code)
-        const DATA_PLANTIO_FIXA = "09/2026";
-
-        // Imagem de fundo do mapa (ocupa o espaço 0–1000 x 0–1000 dos polígonos)
-        const IMAGEM_FUNDO = "./Mapas/america-do-sul.png";
-        document.getElementById('bgFazendaImage').setAttribute('href', IMAGEM_FUNDO);
-
-        // Diagnóstico: avisa quando a imagem de fundo não carrega (fundo fica preto)
-        let bgFalhou = false;
-        document.getElementById('bgFazendaImage').addEventListener('error', () => {
-            bgFalhou = true;
-            console.error('Imagem de fundo não carregou:', IMAGEM_FUNDO);
-        });
-
-        // Polígonos por Talhão. Chave = código do talhão no QR Code.
-        // Formato: "POLY:x,y x,y x,y POLY:x,y x,y x,y" (um ou mais polígonos por talhão)
-        // Coordenadas no espaço 0–1000 (X) por 0–1000 (Y). O zoom é automático.
-        const POLIGONOS = {
-            "AMS001": "POLY:417,613 418,625 432,637 438,623 448,619 471,594 486,584 498,559 496,554 480,545 472,534 470,524 456,529 435,553 439,565 433,572 433,600 417,613 POLY:294,766 306,787 305,793 320,799 325,809 349,794 369,775 388,747 398,702 414,682 412,677 417,657 407,627 404,628 404,617 391,626 378,650 367,653 360,645 352,646 342,661 335,665 329,681 321,687 325,699 338,704 364,704 368,710 343,709 326,715 330,718 317,721 317,725 342,746 381,750 379,757 373,753 362,757 344,755 322,748 310,738 303,738 301,748 308,751 298,755 294,766"
-            // "AMS002": "POLY:x,y x,y x,y POLY:x,y x,y x,y",
-        };
-
-        /* ============================================================ */
-
         const i18n = {
             pt: {
                 appName: "Informações de campo - Tucano Florestal",
@@ -247,7 +363,6 @@
                 installTitle: "Instalação Necessária",
                 installText: "Para utilizar o aplicativo de Informações de campo, você precisa instalá-lo no seu dispositivo.",
                 btnInstall: "Instalar Aplicativo",
-                btnSkipInstall: "Continuar sem instalar (apenas online)",
                 installSafeNote: "Instalação rápida, leve e sem acesso a dados pessoais.",
                 iosInstructions: "No iOS/Safari: toque em <strong>Compartilhar</strong> e selecione <strong>Adicionar à Tela de Início</strong>.",
                 installSuccessTitle: "Instalação Concluída!",
@@ -256,7 +371,7 @@
                 appTitle: "Informações de campo - Tucano Florestal",
                 lblFazenda: "Fazenda",
                 lblTalhao: "Talhão",
-                lblArea: "Área",
+                lblArea: "Área do Talhão",
                 lblEspecie: "Espécie",
                 lblPlantio: "Data de Plantio",
                 btnMapShow: "Visualizar Mapa",
@@ -278,7 +393,6 @@
                 installTitle: "Installation Required",
                 installText: "To use the Field Data app, you need to install it on your device.",
                 btnInstall: "Install Application",
-                btnSkipInstall: "Continue without installing (online only)",
                 installSafeNote: "Fast, lightweight installation with no access to personal data.",
                 iosInstructions: "On iOS/Safari: tap <strong>Share</strong> and select <strong>Add to Home Screen</strong>.",
                 installSuccessTitle: "Installation Complete!",
@@ -287,8 +401,8 @@
                 appTitle: "Field Data - Tucano Florestal",
                 lblFazenda: "Farm",
                 lblTalhao: "Stand",
-                lblArea: "Area",
-                lblEspecie: "Species",
+                lblArea: "Productive Area",
+                lblEspecie: "Specie",
                 lblPlantio: "Planting Date",
                 btnMapShow: "View Map",
                 btnMapHide: "Hide Map",
@@ -304,21 +418,6 @@
                 lblVersion: "Version"
             }
         };
-
-        // Dados do QR recebidos pela URL (capturados antes de limpar a barra de endereço)
-        let dadosDaUrl = '';
-
-        // Modo online: usa o app direto no navegador, sem instalar (vale enquanto a aba/sessão durar)
-        function ativarModoOnline() {
-            document.body.classList.add('modo-online');
-            try { sessionStorage.setItem('modo_online', '1'); } catch (e) { /* ignora */ }
-            if (dadosDaUrl) {
-                window.location.hash = dadosDaUrl; // dispara carregarDados via hashchange
-                dadosDaUrl = '';
-            } else {
-                carregarDados(false);
-            }
-        }
 
         let currentLang = localStorage.getItem('app_lang') || (navigator.language.startsWith('en') ? 'en' : 'pt');
 
@@ -338,12 +437,29 @@
 
                 const matchDev = text.match(/(?:DEVELOPER)\s*=\s*['"`]([^'"`]+)['"`]/i);
                 if (matchDev && matchDev[1]) {
+                    const dev = matchDev[1];
                     document.querySelectorAll('.app-dev-val').forEach(el => {
-                        el.textContent = matchDev[1];
+                        el.textContent = dev;
                     });
                 }
             } catch (e) {
                 console.log("Não foi possível carregar as informações do sw.js:", e);
+            }
+        }
+
+        // CORREÇÃO (manifest): URL da página sem hash/query, usada como base para
+        // resolver caminhos relativos. Um manifest servido via blob: não consegue
+        // resolver "./index.html" sozinho (a base seria o próprio blob:), então
+        // start_url, scope, id e ícones precisam ser convertidos em URLs absolutas.
+        function obterBaseDaPagina() {
+            return window.location.href.split('#')[0].split('?')[0];
+        }
+
+        function resolverUrlAbsoluta(caminho, base) {
+            try {
+                return new URL(caminho, base).href;
+            } catch (e) {
+                return caminho;
             }
         }
 
@@ -359,20 +475,44 @@
                     "display": "standalone",
                     "background_color": "#f4f6f8",
                     "theme_color": "#2e7d32",
-                    "icons": [{ "src": "./Tucano-mini.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }]
+                    "icons": [
+                        {
+                            "src": "./Tucano-mini.png",
+                            "sizes": "512x512",
+                            "type": "image/png",
+                            "purpose": "any maskable"
+                        }
+                    ]
                 };
             }
 
             manifestData.name = i18n[lang].appName;
             manifestData.short_name = i18n[lang].appShortName;
 
-            const blob = new Blob([JSON.stringify(manifestData)], { type: 'application/json' });
+            // CORREÇÃO (manifest): tornar todos os caminhos absolutos
+            const base = obterBaseDaPagina();
+            const startUrl = resolverUrlAbsoluta(manifestData.start_url || './index.html', base);
+            manifestData.start_url = startUrl;
+            manifestData.scope = resolverUrlAbsoluta(manifestData.scope || './', base);
+            manifestData.id = resolverUrlAbsoluta(manifestData.id || manifestData.start_url, base);
+
+            if (Array.isArray(manifestData.icons)) {
+                manifestData.icons = manifestData.icons.map(icone => ({
+                    ...icone,
+                    src: resolverUrlAbsoluta(icone.src, base)
+                }));
+            }
+
+            const stringData = JSON.stringify(manifestData);
+            const blob = new Blob([stringData], { type: 'application/json' });
             const manifestUrl = URL.createObjectURL(blob);
 
             const manifestLink = document.getElementById('manifestLink');
             if (manifestLink) {
                 const oldHref = manifestLink.getAttribute('href');
-                if (oldHref && oldHref.startsWith('blob:')) URL.revokeObjectURL(oldHref);
+                if (oldHref && oldHref.startsWith('blob:')) {
+                    URL.revokeObjectURL(oldHref);
+                }
                 manifestLink.setAttribute('href', manifestUrl);
             }
         }
@@ -387,7 +527,9 @@
 
             document.querySelectorAll('[data-i18n]').forEach(el => {
                 const key = el.getAttribute('data-i18n');
-                if (i18n[lang][key]) el.innerHTML = i18n[lang][key];
+                if (i18n[lang][key]) {
+                    el.innerHTML = i18n[lang][key];
+                }
             });
 
             document.querySelectorAll('.lang-btn').forEach(btn => {
@@ -395,12 +537,18 @@
             });
 
             const btnCam = document.getElementById('btnToggleCamera');
-            if (btnCam) btnCam.textContent = isScanning ? i18n[lang].btnCamClose : i18n[lang].btnCamOpen;
+            if (btnCam) {
+                btnCam.textContent = isScanning ? i18n[lang].btnCamClose : i18n[lang].btnCamOpen;
+            }
 
             const btnMapa = document.getElementById('m');
             const mapContainer = document.getElementById('mapContainer');
-            if (!btnMapa.classList.contains('disabled') && mapContainer.style.display === 'block') {
-                btnMapa.textContent = i18n[currentLang].btnMapHide;
+            if (!btnMapa.classList.contains('disabled')) {
+                if (mapContainer.style.display === 'none') {
+                    btnMapa.textContent = i18n[currentLang].btnMapShow;
+                } else {
+                    btnMapa.textContent = i18n[currentLang].btnMapHide;
+                }
             } else {
                 btnMapa.textContent = i18n[currentLang].btnMapShow;
             }
@@ -412,6 +560,7 @@
         function exibirToast(mensagem, tipo = 'success') {
             const toast = document.getElementById('toast');
             if (!toast) return;
+
             clearTimeout(toastTimeout);
             toast.textContent = mensagem;
             toast.className = `toast toast-${tipo} show`;
@@ -430,11 +579,25 @@
 
             setTimeout(() => {
                 window.removeEventListener('blur', onBlur);
+
                 if (!mudouDeTela) {
-                    document.body.classList.remove('is-standalone');
-                    if (!navigator.onLine) exibirToast(i18n[currentLang].toastNoInternet, 'error');
+                    if (navigator.onLine) {
+                        document.body.classList.remove('is-standalone');
+                    } else {
+                        document.body.classList.remove('is-standalone');
+                        exibirToast(i18n[currentLang].toastNoInternet, 'error');
+                    }
                 }
             }, 1200);
+        }
+
+        // CORREÇÃO (QR): função única para ler os dados da URL (hash ou ?dados=)
+        function lerDadosDaUrl() {
+            const hash = window.location.hash.substring(1);
+            if (hash) return hash;
+
+            const params = new URLSearchParams(window.location.search);
+            return params.get('dados') || '';
         }
 
         function verificarStatusApp() {
@@ -442,11 +605,7 @@
                 window.navigator.standalone ||
                 document.referrer.includes('android-app://');
 
-            let dadosStr = window.location.hash.substring(1);
-            if (!dadosStr) {
-                const params = new URLSearchParams(window.location.search);
-                if (params.has('dados')) dadosStr = params.get('dados');
-            }
+            const dadosStr = lerDadosDaUrl();
 
             if (isStandalone) {
                 document.body.classList.add('is-standalone');
@@ -468,39 +627,87 @@
             }
         }
 
-        // Converte a lista de polígonos hardcoded em path SVG + todos os pontos (para o zoom)
-        function montarPath(listaPoligonos) {
+        function formatarDataPlantio(dataStr) {
+            if (!dataStr || dataStr === '-') return '-';
+
+            let ano, mes;
+
+            if (dataStr.includes('-')) {
+                const partes = dataStr.split('-');
+                if (partes[0].length === 4) {
+                    ano = partes[0];
+                    mes = parseInt(partes[1], 10) - 1;
+                } else {
+                    ano = partes[2];
+                    mes = parseInt(partes[1], 10) - 1;
+                }
+            } else if (dataStr.includes('/')) {
+                const partes = dataStr.split('/');
+                if (partes.length === 3) {
+                    ano = partes[2];
+                    mes = parseInt(partes[1], 10) - 1;
+                } else if (partes.length === 2) {
+                    ano = partes[1];
+                    mes = parseInt(partes[0], 10) - 1;
+                }
+            }
+
+            if (mes !== undefined && ano !== undefined && !isNaN(mes)) {
+                const anoCurto = ano.length === 4 ? ano.slice(-2) : ano;
+                const date = new Date(2000, mes, 1);
+                const mesAbrev = date.toLocaleString(currentLang === 'pt' ? 'pt-BR' : 'en-US', { month: 'short' }).replace('.', '');
+
+                return `${mesAbrev.toLowerCase()}/${anoCurto}`;
+            }
+
+            return dataStr;
+        }
+
+        function converterPolyParaPathData(mapaStr) {
+            if (!mapaStr) return { pathData: "", todosPontos: "" };
+
+            const blocos = mapaStr.split(/POLY:/i).filter(b => b.trim().length > 0);
             let pathD = "";
-            const todos = [];
-            // Aceita string única ou array; cada item pode ter vários "POLY:x,y x,y ..."
-            const blocos = [].concat(listaPoligonos)
-                .flatMap(item => String(item).split(/POLY:/i))
-                .filter(b => b.trim().length > 0);
-            blocos.forEach(poly => {
-                const pts = poly.trim().split(/\s+/).filter(p => {
-                    const [x, y] = p.split(',');
-                    return x !== undefined && y !== undefined && !isNaN(x) && !isNaN(y);
-                });
-                if (pts.length >= 3) {
-                    pathD += `M ${pts.join(' L ')} Z `;
-                    todos.push(...pts);
+            let todosPontos = [];
+
+            blocos.forEach(bloco => {
+                const pares = bloco.trim().split(/\s+/);
+                if (pares.length >= 3) {
+                    const coordsValidas = [];
+                    pares.forEach((par, idx) => {
+                        const [x, y] = par.split(',');
+                        if (x !== undefined && y !== undefined && !isNaN(x) && !isNaN(y)) {
+                            coordsValidas.push(`${x},${y}`);
+                            todosPontos.push(`${x},${y}`);
+                        }
+                    });
+
+                    if (coordsValidas.length >= 3) {
+                        pathD += `M ${coordsValidas.join(' L ')} Z `;
+                    }
                 }
             });
-            return { pathData: pathD.trim(), todosPontos: todos.join(' ') };
+
+            return { pathData: pathD.trim(), todosPontos: todosPontos.join(' ') };
         }
 
         function calcularZoom(pontos) {
             if (!pontos) return "0 0 1000 1000";
 
+            const pares = pontos.trim().split(/\s+/);
             let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-            pontos.trim().split(/\s+/).forEach(par => {
-                const [sx, sy] = par.split(',');
-                const x = parseFloat(sx), y = parseFloat(sy);
-                if (!isNaN(x) && !isNaN(y)) {
-                    if (x < minX) minX = x;
-                    if (x > maxX) maxX = x;
-                    if (y < minY) minY = y;
-                    if (y > maxY) maxY = y;
+
+            pares.forEach(par => {
+                const coords = par.split(',');
+                if (coords.length === 2) {
+                    const x = parseFloat(coords[0]);
+                    const y = parseFloat(coords[1]);
+                    if (!isNaN(x) && !isNaN(y)) {
+                        if (x < minX) minX = x;
+                        if (x > maxX) maxX = x;
+                        if (y < minY) minY = y;
+                        if (y > maxY) maxY = y;
+                    }
                 }
             });
 
@@ -509,233 +716,117 @@
             const centroX = (minX + maxX) / 2;
             const centroY = (minY + maxY) / 2;
 
+            const w = maxX - minX;
+            const h = maxY - minY;
+
             const container = document.getElementById('mapContainer');
-            const proporcaoTela = (container.clientWidth || 320) / (container.clientHeight || 220);
+            const larguraContainer = container.clientWidth || 320;
+            const alturaContainer = container.clientHeight || 220;
+            const proporcaoTela = larguraContainer / alturaContainer;
 
-            let zoomW = Math.max(maxX - minX, 1) * 1.6;
-            let zoomH = Math.max(maxY - minY, 1) * 1.6;
+            let zoomW = w * 1.6;
+            let zoomH = h * 1.6;
 
-            if (zoomW / zoomH > proporcaoTela) zoomH = zoomW / proporcaoTela;
-            else zoomW = zoomH * proporcaoTela;
-
-            return `${centroX - zoomW / 2} ${centroY - zoomH / 2} ${zoomW} ${zoomH}`;
-        }
-
-        // ---- Zoom e arrasto limitados do mapa (fundo + polígono) ----
-        const ZOOM_MAX = 4;          // zoom máximo (1 = enquadramento inicial)
-        const MARGEM_PAN = 1.4;      // área navegável = enquadramento inicial x 1,4
-        let baseMapa = null, baseStr = '';
-        let viewMapa = { cx: 500, cy: 500, z: 1 };
-
-        function definirBaseMapa(str) {
-            if (str === baseStr) return; // mantém zoom/posição do usuário nas atualizações
-            baseStr = str;
-            const [x, y, w, h] = str.split(' ').map(Number);
-            baseMapa = { x, y, w, h };
-            viewMapa = { cx: x + w / 2, cy: y + h / 2, z: 1 };
-            aplicarViewBox();
-        }
-
-        function resetarBaseMapa() {
-            baseStr = '';
-            baseMapa = null;
-            document.getElementById('talhaoSvg').setAttribute('viewBox', '0 0 1000 1000');
-        }
-
-        function aplicarViewBox() {
-            if (!baseMapa) return;
-            const z = Math.min(Math.max(viewMapa.z, 1), ZOOM_MAX);
-            viewMapa.z = z;
-            const w = baseMapa.w / z, h = baseMapa.h / z;
-
-            const bcx = baseMapa.x + baseMapa.w / 2, bcy = baseMapa.y + baseMapa.h / 2;
-            const offX = Math.max((baseMapa.w * MARGEM_PAN - w) / 2, 0);
-            const offY = Math.max((baseMapa.h * MARGEM_PAN - h) / 2, 0);
-            let cx = Math.min(Math.max(viewMapa.cx, bcx - offX), bcx + offX);
-            let cy = Math.min(Math.max(viewMapa.cy, bcy - offY), bcy + offY);
-
-            // nunca sai da imagem de fundo (0–1000)
-            cx = w >= 1000 ? 500 : Math.min(Math.max(cx, w / 2), 1000 - w / 2);
-            cy = h >= 1000 ? 500 : Math.min(Math.max(cy, h / 2), 1000 - h / 2);
-
-            viewMapa.cx = cx; viewMapa.cy = cy;
-            document.getElementById('talhaoSvg')
-                .setAttribute('viewBox', `${cx - w / 2} ${cy - h / 2} ${w} ${h}`);
-        }
-
-        // ---- Retorno automático ao enquadramento inicial ----
-        const RETORNO_MS = 2000;     // tempo sem tocar no mapa antes de voltar ao tamanho original
-        const RETORNO_ANIM_MS = 350; // duração da transição de volta
-        let timerRetorno = null, animRetorno = null;
-
-        function cancelarRetorno() {
-            clearTimeout(timerRetorno);
-            if (animRetorno) { cancelAnimationFrame(animRetorno); animRetorno = null; }
-        }
-
-        function agendarRetorno() {
-            clearTimeout(timerRetorno);
-            timerRetorno = setTimeout(voltarAoInicio, RETORNO_MS);
-        }
-
-        function voltarAoInicio() {
-            if (!baseMapa) return;
-            const ini = { ...viewMapa };
-            const fim = { cx: baseMapa.x + baseMapa.w / 2, cy: baseMapa.y + baseMapa.h / 2, z: 1 };
-            if (Math.abs(ini.z - 1) < 0.001 && Math.abs(ini.cx - fim.cx) < 0.5 && Math.abs(ini.cy - fim.cy) < 0.5) return;
-
-            const t0 = performance.now();
-            const passo = (agora) => {
-                const t = Math.min((agora - t0) / RETORNO_ANIM_MS, 1);
-                const e = 1 - Math.pow(1 - t, 3); // easing suave
-                viewMapa.cx = ini.cx + (fim.cx - ini.cx) * e;
-                viewMapa.cy = ini.cy + (fim.cy - ini.cy) * e;
-                viewMapa.z = ini.z + (fim.z - ini.z) * e;
-                aplicarViewBox();
-                animRetorno = t < 1 ? requestAnimationFrame(passo) : null;
-            };
-            animRetorno = requestAnimationFrame(passo);
-        }
-
-        // Zoom mantendo fixo o ponto (px, py) em pixels dentro do container
-        function zoomEm(px, py, fator, rect) {
-            if (!baseMapa) return;
-            const w = baseMapa.w / viewMapa.z, h = baseMapa.h / viewMapa.z;
-            const sx = viewMapa.cx - w / 2 + (px / rect.width) * w;
-            const sy = viewMapa.cy - h / 2 + (py / rect.height) * h;
-            const nz = Math.min(Math.max(viewMapa.z * fator, 1), ZOOM_MAX);
-            const nw = baseMapa.w / nz, nh = baseMapa.h / nz;
-            viewMapa.cx = sx - (px / rect.width) * nw + nw / 2;
-            viewMapa.cy = sy - (py / rect.height) * nh + nh / 2;
-            viewMapa.z = nz;
-            aplicarViewBox();
-        }
-
-        function iniciarGestosMapa() {
-            const el = document.getElementById('mapContainer');
-            const ponteiros = new Map();
-            let distAnterior = 0;
-
-            const distancia = () => {
-                const [a, b] = [...ponteiros.values()];
-                return Math.hypot(a.x - b.x, a.y - b.y);
-            };
-
-            el.addEventListener('pointerdown', (e) => {
-                cancelarRetorno();
-                el.setPointerCapture(e.pointerId);
-                ponteiros.set(e.pointerId, { x: e.clientX, y: e.clientY });
-                if (ponteiros.size === 2) distAnterior = distancia();
-            });
-
-            el.addEventListener('pointermove', (e) => {
-                if (!ponteiros.has(e.pointerId) || !baseMapa) return;
-                const anterior = ponteiros.get(e.pointerId);
-                ponteiros.set(e.pointerId, { x: e.clientX, y: e.clientY });
-                const rect = el.getBoundingClientRect();
-
-                if (ponteiros.size === 1) {
-                    const unidadesPorPx = (baseMapa.w / viewMapa.z) / rect.width;
-                    viewMapa.cx -= (e.clientX - anterior.x) * unidadesPorPx;
-                    viewMapa.cy -= (e.clientY - anterior.y) * unidadesPorPx;
-                    aplicarViewBox();
-                } else if (ponteiros.size === 2) {
-                    const [a, b] = [...ponteiros.values()];
-                    const d = distancia();
-                    if (distAnterior > 0) {
-                        zoomEm((a.x + b.x) / 2 - rect.left, (a.y + b.y) / 2 - rect.top, d / distAnterior, rect);
-                    }
-                    distAnterior = d;
-                }
-            });
-
-            const soltar = (e) => {
-                ponteiros.delete(e.pointerId);
-                distAnterior = 0;
-                if (ponteiros.size === 0) agendarRetorno(); // volta ao original após 2 s sem toque
-            };
-            el.addEventListener('pointerup', soltar);
-            el.addEventListener('pointercancel', soltar);
-
-            el.addEventListener('wheel', (e) => {
-                e.preventDefault();
-                const rect = el.getBoundingClientRect();
-                cancelarRetorno();
-                zoomEm(e.clientX - rect.left, e.clientY - rect.top, Math.exp(-e.deltaY * 0.0015), rect);
-                agendarRetorno();
-            }, { passive: false });
-
-            // Duplo toque / duplo clique volta ao enquadramento inicial
-            el.addEventListener('dblclick', () => {
-                cancelarRetorno();
-                if (!baseMapa) return;
-                viewMapa = { cx: baseMapa.x + baseMapa.w / 2, cy: baseMapa.y + baseMapa.h / 2, z: 1 };
-                aplicarViewBox();
-            });
-        }
-
-        function limparCampos() {
-            ['f', 't', 'a', 'e', 'p'].forEach(id => { document.getElementById(id).textContent = '-'; });
-            const btnMapa = document.getElementById('m');
-            btnMapa.classList.add('disabled');
-            btnMapa.textContent = i18n[currentLang].btnMapShow;
-            document.getElementById('mapContainer').style.display = 'none';
-            document.getElementById('polygonTalhao').setAttribute('d', '');
-            resetarBaseMapa();
-        }
-
-        // Formato do QR: TALHAO|AREA|ESPECIE|(demais campos, como data e link .pdf, são ignorados)
-        function carregarDados(exibirToastNotif = true) {
-            let hash = window.location.hash.substring(1);
-            if (!hash) {
-                const params = new URLSearchParams(window.location.search);
-                if (params.has('dados')) hash = params.get('dados');
+            if (zoomW / zoomH > proporcaoTela) {
+                zoomH = zoomW / proporcaoTela;
+            } else {
+                zoomW = zoomH * proporcaoTela;
             }
 
-            if (!hash) { limparCampos(); return; }
+            const startX = centroX - (zoomW / 2);
+            const startY = centroY - (zoomH / 2);
 
-            let dadosDecodificados;
-            try { dadosDecodificados = decodeURIComponent(hash); }
-            catch (e) { dadosDecodificados = hash; }
+            return `${startX} ${startY} ${zoomW} ${zoomH}`;
+        }
 
-            // Data de plantio e link .pdf do QR são descartados propositalmente
-            const [talhao, area, especie] = dadosDecodificados.split('|').map(s => s.trim());
+        function obterCaminhoImagemFazenda(nomeFazenda) {
+            if (!nomeFazenda || nomeFazenda === '-') return './Mapas/padrao.png';
+
+            const slug = nomeFazenda
+                .toLowerCase()
+                .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+                .replace(/[^a-z0-9]/g, "-")
+                .replace(/-+/g, "-")
+                .replace(/^-|-$/g, "");
+
+            return `./Mapas/${slug}.png`;
+        }
+
+        function carregarDados(exibirToastNotif = true) {
+            const hash = lerDadosDaUrl();
 
             const btnMapa = document.getElementById('m');
             const mapContainer = document.getElementById('mapContainer');
             const pathElem = document.getElementById('polygonTalhao');
-            const svgElement = document.getElementById('talhaoSvg');
 
-            document.getElementById('f').textContent = FAZENDA_FIXA;
+            let dadosDecodificados;
+            try {
+                dadosDecodificados = decodeURIComponent(hash);
+            } catch (e) {
+                dadosDecodificados = hash;
+            }
+
+            const [fazenda, talhao, area, especie, plantio, mapa] = dadosDecodificados.split('|');
+            const bgImg = document.getElementById('bgFazendaImage');
+            if (bgImg) {
+                bgImg.setAttribute('href', obterCaminhoImagemFazenda(fazenda));
+            }
+
+            if (!hash) {
+                document.getElementById('f').textContent = '-';
+                document.getElementById('t').textContent = '-';
+                document.getElementById('a').textContent = '-';
+                document.getElementById('e').textContent = '-';
+                document.getElementById('p').textContent = '-';
+
+                btnMapa.classList.add('disabled');
+                btnMapa.textContent = i18n[currentLang].btnMapShow;
+                mapContainer.style.display = 'none';
+                pathElem.setAttribute('d', '');
+                return;
+            }
+
+            let areaFormatada = area;
+            if (area) {
+                if (currentLang === 'pt') {
+                    areaFormatada = area.replace('.', ',');
+                } else {
+                    areaFormatada = area.replace(',', '.');
+                }
+            }
+
+            document.getElementById('f').textContent = fazenda || '-';
             document.getElementById('t').textContent = talhao || '-';
-            // Separador decimal: vírgula em PT, ponto em EN
-            const areaFormatada = area
-                ? (currentLang === 'pt' ? area.replace('.', ',') : area.replace(',', '.'))
-                : '';
             document.getElementById('a').textContent = areaFormatada ? `${areaFormatada}${i18n[currentLang].unitHa}` : '-';
             document.getElementById('e').textContent = especie || '-';
-            document.getElementById('p').textContent = DATA_PLANTIO_FIXA;
+            document.getElementById('p').textContent = formatarDataPlantio(plantio);
 
+            // MANTER O ESTADO ATUAL DO MAPA (Não força mais esconder se já estiver aberto)
             const mapaEstavaVisivel = mapContainer.style.display === 'block';
-            const poligonos = POLIGONOS[talhao];
+            const svgElement = document.getElementById('talhaoSvg');
 
-            if (poligonos && poligonos.length) {
-                const { pathData, todosPontos } = montarPath(poligonos);
+            if (mapa && mapa.includes('POLY:')) {
+                const { pathData, todosPontos } = converterPolyParaPathData(mapa);
                 pathElem.setAttribute('d', pathData);
-                definirBaseMapa(calcularZoom(todosPontos));
+
+                const viewBoxZoom = calcularZoom(todosPontos);
+                svgElement.setAttribute('viewBox', viewBoxZoom);
+
                 btnMapa.classList.remove('disabled');
+                // Mantém o texto do botão de acordo com a visibilidade atual
                 btnMapa.textContent = mapaEstavaVisivel ? i18n[currentLang].btnMapHide : i18n[currentLang].btnMapShow;
             } else {
                 pathElem.setAttribute('d', '');
-                resetarBaseMapa();
+                svgElement.setAttribute('viewBox', '0 0 1000 1000');
                 btnMapa.classList.add('disabled');
                 btnMapa.textContent = i18n[currentLang].btnMapShow;
                 mapContainer.style.display = 'none';
             }
 
-            if (exibirToastNotif) exibirToast(i18n[currentLang].toastSuccess, 'success');
+            if (exibirToastNotif) {
+                exibirToast(i18n[currentLang].toastSuccess, 'success');
+            }
         }
-
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('./sw.js')
                 .then(() => console.log('Service Worker ativo.'))
@@ -756,6 +847,7 @@
                         const { outcome } = await deferredPrompt.userChoice;
                         if (outcome === 'accepted') {
                             window.close();
+
                             const installBox = document.querySelector('.install-box');
                             if (installBox) {
                                 installBox.innerHTML = `
@@ -777,19 +869,27 @@
         let isScanning = false;
 
         function rolarAteOFinal() {
+            // Executa após a câmara renderizar totalmente
             setTimeout(() => {
                 const readerContainer = document.getElementById('reader-container');
-                if (readerContainer) readerContainer.scrollIntoView({ behavior: 'auto', block: 'end' });
+                if (readerContainer) {
+                    readerContainer.scrollIntoView({ behavior: 'auto', block: 'end' });
+                }
             }, 200);
         }
 
         async function iniciarCameraDirect() {
             const readerElem = document.getElementById('reader');
-            if (readerElem) readerElem.style.display = 'block';
+            if (readerElem) {
+                readerElem.style.display = 'block';
+            }
 
+            // Garante que rola imediatamente para dar espaço de renderização
             rolarAteOFinal();
 
-            if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+            if (!html5QrCode) {
+                html5QrCode = new Html5Qrcode("reader");
+            }
 
             const qrCodeSuccessCallback = (decodedText) => {
                 let conteudo = decodedText;
@@ -801,12 +901,12 @@
                     } catch (e) {
                         conteudo = decodedText.split('dados=')[1] || decodedText;
                     }
-                } else if (decodedText.includes('#')) {
+                }
+                else if (decodedText.includes('#')) {
                     conteudo = decodedText.split('#')[1];
                 }
 
-                try { conteudo = decodeURIComponent(conteudo); } catch (e) { /* mantém como está */ }
-                conteudo = conteudo.replace(/^#/, '');
+                conteudo = decodeURIComponent(conteudo).replace(/^#/, '');
 
                 if (conteudo.includes('|')) {
                     window.location.hash = conteudo;
@@ -819,19 +919,31 @@
             const config = { fps: 10, qrbox: { width: 220, height: 220 } };
 
             try {
-                await html5QrCode.start({ facingMode: { exact: "environment" } }, config, qrCodeSuccessCallback);
+                await html5QrCode.start(
+                    { facingMode: { exact: "environment" } },
+                    config,
+                    qrCodeSuccessCallback
+                );
                 isScanning = true;
                 document.getElementById('btnToggleCamera').textContent = i18n[currentLang].btnCamClose;
+
                 rolarAteOFinal();
             } catch (err) {
                 try {
-                    await html5QrCode.start({ facingMode: "environment" }, config, qrCodeSuccessCallback);
+                    await html5QrCode.start(
+                        { facingMode: "environment" },
+                        config,
+                        qrCodeSuccessCallback
+                    );
                     isScanning = true;
                     document.getElementById('btnToggleCamera').textContent = i18n[currentLang].btnCamClose;
+
                     rolarAteOFinal();
                 } catch (fallbackErr) {
                     console.error("Erro na câmera:", fallbackErr);
-                    if (readerElem) readerElem.style.display = 'none';
+                    if (readerElem) {
+                        readerElem.style.display = 'none';
+                    }
                     exibirToast(i18n[currentLang].toastCamError, 'error');
                 }
             }
@@ -839,65 +951,72 @@
 
         async function pararCamera() {
             if (html5QrCode && isScanning) {
-                try { await html5QrCode.stop(); }
-                catch (e) { console.log("Erro ao desligar a câmera:", e); }
+                try {
+                    await html5QrCode.stop();
+                } catch (e) {
+                    console.log("Erro ao desligar a câmera:", e);
+                }
                 isScanning = false;
                 document.getElementById('btnToggleCamera').textContent = i18n[currentLang].btnCamOpen;
 
                 const readerElem = document.getElementById('reader');
-                if (readerElem) readerElem.style.display = 'none';
+                if (readerElem) {
+                    readerElem.style.display = 'none';
+                }
 
+                // Sobe suavemente até ao topo
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         }
-
         document.getElementById('btnToggleCamera').addEventListener('click', () => {
-            if (isScanning) pararCamera();
-            else iniciarCameraDirect();
+            if (isScanning) {
+                pararCamera();
+            } else {
+                iniciarCameraDirect();
+            }
         });
-
         let intervaloAtualizacao = null;
 
         function iniciarAutoAtualizacao(intervaloEmSegundos = 30) {
-            if (intervaloAtualizacao) clearInterval(intervaloAtualizacao);
+            // Limpa qualquer temporizador anterior para evitar duplicidade
+            if (intervaloAtualizacao) {
+                clearInterval(intervaloAtualizacao);
+            }
+
             intervaloAtualizacao = setInterval(() => {
-                if (window.location.hash.substring(1)) carregarDados(false);
+                // Verifica se há dados carregados antes de atualizar
+                if (lerDadosDaUrl()) {
+                    console.log("Atualizando dados em segundo plano...");
+                    // Executa o carregamento mantendo os dados e atualizando sem toast ruidoso
+                    carregarDados(false);
+                }
             }, intervaloEmSegundos * 1000);
         }
 
+        // Parar a atualização quando o app for para segundo plano (para economizar bateria)
         document.addEventListener("visibilitychange", () => {
             if (document.hidden) {
                 if (intervaloAtualizacao) clearInterval(intervaloAtualizacao);
             } else {
-                iniciarAutoAtualizacao(30);
+                iniciarAutoAtualizacao(30); // Reativa ao voltar para o app
             }
         });
-
         window.addEventListener('DOMContentLoaded', () => {
-            const paramsIniciais = new URLSearchParams(window.location.search);
-            dadosDaUrl = window.location.hash.substring(1) || paramsIniciais.get('dados') || '';
-
-            if (window.location.hash || window.location.search) {
+            // CORREÇÃO (QR): antes, a URL era limpa aqui (history.replaceState com
+            // apenas o pathname) ANTES de alterarIdioma() e verificarStatusApp()
+            // lerem os dados, e o app abria vazio. Agora os dados são preservados:
+            // se vierem em ?dados=, são movidos para o hash (sem recarregar a página).
+            const dadosIniciais = lerDadosDaUrl();
+            if (dadosIniciais) {
+                history.replaceState(null, "", window.location.pathname + '#' + dadosIniciais);
+            } else if (window.location.search) {
                 history.replaceState(null, "", window.location.pathname);
             }
 
             alterarIdioma(currentLang);
             verificarStatusApp();
-
-            // App instalado aberto por um link de QR: aplica os dados da URL (que foram limpos acima)
-            if (document.body.classList.contains('is-standalone') && dadosDaUrl) {
-                window.location.hash = dadosDaUrl; // dispara carregarDados via hashchange
-                dadosDaUrl = '';
-            }
-
             carregarInfoDoSW();
             iniciarAutoAtualizacao(30);
-            iniciarGestosMapa();
-
-            document.getElementById('btnPularInstalacao').addEventListener('click', ativarModoOnline);
-            let modoOnlineSalvo = false;
-            try { modoOnlineSalvo = sessionStorage.getItem('modo_online') === '1'; } catch (e) { /* ignora */ }
-            if (modoOnlineSalvo && !document.body.classList.contains('is-standalone')) ativarModoOnline();
 
             document.getElementById('m').addEventListener('click', (e) => {
                 e.preventDefault();
@@ -909,9 +1028,6 @@
                 if (mapContainer.style.display === 'none' || mapContainer.style.display === '') {
                     mapContainer.style.display = 'block';
                     btnMapa.textContent = i18n[currentLang].btnMapHide;
-                    // recalcula o zoom agora que o container tem dimensões reais
-                    carregarDados(false);
-                    if (bgFalhou) exibirToast('Imagem de fundo não carregou: ' + IMAGEM_FUNDO, 'error');
                 } else {
                     mapContainer.style.display = 'none';
                     btnMapa.textContent = i18n[currentLang].btnMapShow;
@@ -922,7 +1038,9 @@
         window.addEventListener('hashchange', () => carregarDados(true));
 
         window.addEventListener('visibilitychange', () => {
-            if (document.hidden && isScanning) pararCamera();
+            if (document.hidden && isScanning) {
+                pararCamera();
+            }
         });
         window.addEventListener('pagehide', pararCamera);
     </script>
